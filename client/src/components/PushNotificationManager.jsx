@@ -110,22 +110,43 @@ const PushNotificationManager = () => {
         }
     };
 
+    const sendTest = async () => {
+        try {
+            await api.post('/notifications/test');
+            toast.success('Test notification sent!');
+        } catch (error) {
+            console.error('Test failed:', error);
+            toast.error('Failed to send test notification.');
+        }
+    };
+
     if (!('Notification' in window)) {
         return null; // Push not supported
     }
 
     return (
-        <button
-            onClick={handleToggle}
-            className={`p-2 rounded-lg transition-colors ${
-                isSubscribed 
-                    ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' 
-                    : 'bg-surface text-muted hover:text-accent hover:bg-surface/80'
-            }`}
-            title={isSubscribed ? 'Notifications Enabled' : 'Enable Notifications'}
-        >
-            {isSubscribed ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-2">
+            {isSubscribed && (
+                <button
+                    onClick={sendTest}
+                    className="p-2 rounded-lg bg-surface text-muted hover:text-accent hover:bg-surface/80 transition-colors"
+                    title="Send Test Notification"
+                >
+                    <span className="text-xs font-bold">TEST</span>
+                </button>
+            )}
+            <button
+                onClick={handleToggle}
+                className={`p-2 rounded-lg transition-colors ${
+                    isSubscribed 
+                        ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' 
+                        : 'bg-surface text-muted hover:text-accent hover:bg-surface/80'
+                }`}
+                title={isSubscribed ? 'Notifications Enabled' : 'Enable Notifications'}
+            >
+                {isSubscribed ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+            </button>
+        </div>
     );
 };
 
