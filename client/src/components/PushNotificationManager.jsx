@@ -38,6 +38,17 @@ const PushNotificationManager = () => {
             const subscription = await registration.pushManager.getSubscription();
             if (subscription) {
                 setIsSubscribed(true);
+                
+                // AUTO-SYNC: Ensure server has this subscription (fixes desync issues)
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        await api.post('/notifications/subscribe', subscription);
+                        console.log('✅ Auto-synced subscription with server');
+                    }
+                } catch (err) {
+                    console.error('⚠️ Auto-sync failed:', err);
+                }
             }
         }
     };
