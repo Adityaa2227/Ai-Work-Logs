@@ -63,7 +63,7 @@ const PushNotificationManager = () => {
             toast.success('Successfully subscribed to notifications!');
         } catch (error) {
             console.error('Failed to subscribe:', error);
-            toast.error('Failed to subscribe to notifications.');
+            toast.error(`Failed to subscribe: ${error.message || 'Unknown error'}`);
         }
     };
 
