@@ -82,7 +82,7 @@ const LogForm = ({ log, onSuccess, readOnly = false }) => {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex gap-2 p-1 bg-surface rounded-xl border border-border">
+            <div className="flex flex-wrap gap-2 p-1 bg-surface rounded-xl border border-border">
                 {['Available', 'No Work', 'Leave', 'Holiday'].map((s) => (
                     <button
                         key={s}
