@@ -8,6 +8,15 @@ import CompanySwitcher from './CompanySwitcher';
 
 const Layout = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const location = useLocation();
+
+    const navItems = [
+        { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+        { name: 'My Logs', path: '/logs', icon: FileText },
+        { name: 'Analytics', path: '/analytics', icon: BarChart2 },
+        { name: 'Self-Improvement', path: '/improvement', icon: TrendingUp },
+        { name: 'Export', path: '/export', icon: Download },
+    ];
     
     // Close mobile menu when route changes
     useEffect(() => {
