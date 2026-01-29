@@ -1,6 +1,35 @@
 const cron = require('node-cron');
-const notifier = require('node-notifier');
-const path = require('path');
+const webpush = require('web-push');
+const Subscription = require('../models/Subscription');
+
+webpush.setVapidDetails(
+    'mailto:aditya@example.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+);
+
+const sendPush = async (payload) => {
+    try {
+        const subscriptions = await Subscription.find();
+        subscriptions.forEach(sub => {
+            const pushSubscription = {
+                endpoint: sub.endpoint,
+                keys: sub.keys
+            };
+
+            webpush.sendNotification(pushSubscription, JSON.stringify(payload))
+                .catch(err => {
+                    console.error('Error sending push:', err);
+                    if (err.statusCode === 410) {
+                        // Subscription expired/invalid
+                        Subscription.findOneAndDelete({ endpoint: sub.endpoint }).exec();
+                    }
+                });
+        });
+    } catch (error) {
+        console.error('Error fetching subscriptions:', error);
+    }
+};
 
 const initNotifications = () => {
     // Schedule task for 1:30 PM, 5:30 PM, and 11:30 PM daily
@@ -17,20 +46,17 @@ const initNotifications = () => {
 
             console.log(`Triggering ${timeOfDay} work log reminder...`);
             
-            notifier.notify({
+            const payload = {
                 title: 'Work Log Reminder',
-                message: `It's time to log your progress! (${timeOfDay} check-in)`,
-                sound: true,
-                wait: true,
-                appID: 'Work Log App' 
-            },
-            (err, response, metadata) => {
-                if (err) console.error('Notification error:', err);
-            });
+                body: `It's time to log your progress! (${timeOfDay} check-in)`,
+                icon: '/pwa-192x192.png'
+            };
+
+            sendPush(payload);
         });
     });
 
-    console.log('Daily notifications scheduled for 1:30 PM, 5:30 PM, and 11:30 PM.');
+    console.log('Push notifications scheduled for 1:30 PM, 5:30 PM, and 11:30 PM.');
 };
 
 module.exports = { initNotifications };

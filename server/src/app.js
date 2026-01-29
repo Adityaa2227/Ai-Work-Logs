@@ -19,6 +19,7 @@ app.use('/api/companies', require('./routes/companyRoutes'));
 app.use('/api/summaries', require('./routes/summaryRoutes'));
 app.use('/api/feedback', require('./routes/feedbackRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 const { initNotifications } = require('./services/notificationService');
 initNotifications();

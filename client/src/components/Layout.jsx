@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 
 import CompanySwitcher from './CompanySwitcher';
+import PushNotificationManager from './PushNotificationManager';
 
 const Layout = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -25,6 +26,10 @@ const Layout = () => {
 
     return (
         <div className="flex h-screen bg-bg overflow-hidden font-sans text-text">
+import PushNotificationManager from './PushNotificationManager';
+
+// ... inside Layout return ...
+
             {/* Mobile Header */}
             <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-40 flex items-center justify-between px-4">
                 <div className="flex items-center gap-2">
@@ -35,12 +40,15 @@ const Layout = () => {
                     </div>
                     <span className="font-bold text-lg">WorkLog AI</span>
                 </div>
-                <button 
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    className="p-2 hover:bg-surface rounded-lg transition-colors"
-                >
-                    <Menu className="w-6 h-6 text-text" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <PushNotificationManager />
+                    <button 
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="p-2 hover:bg-surface rounded-lg transition-colors"
+                    >
+                        <Menu className="w-6 h-6 text-text" />
+                    </button>
+                </div>
             </header>
 
             {/* Mobile Sidebar Overlay */}
