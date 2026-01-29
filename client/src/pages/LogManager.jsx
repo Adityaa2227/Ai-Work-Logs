@@ -31,7 +31,7 @@ const LogManager = () => {
 
     const { data, isLoading } = useQuery({
         queryKey: ['logs', search, selectedCompany?._id],
-        queryFn: () => getLogs({ search, company: selectedCompany?._id }),
+        queryFn: () => getLogs({ search, company: selectedCompany?._id, limit: 1000 }),
         enabled: !!selectedCompany
     });
 
