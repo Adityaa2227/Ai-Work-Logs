@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: work-logs-server
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_VERSION
+        value: 20.11.0

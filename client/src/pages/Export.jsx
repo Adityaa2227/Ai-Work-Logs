@@ -8,16 +8,18 @@ const Export = () => {
     // const downloadFile helper removed
 
     const handleDownload = (format) => {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        
         if (format === 'pdf') {
              // Download ZIP Bundle containing 3 PDFs
-             let url = `http://localhost:5000/api/logs/export/bundle?v=${Date.now()}`;
+             let url = `${API_URL}/api/logs/export/bundle?v=${Date.now()}`;
              if (range.from) url += `&from=${range.from}`;
              if (range.to) url += `&to=${range.to}`;
              window.open(url, '_top'); // _top or _blank
              return;
         }
 
-        let url = `http://localhost:5000/api/logs/export?format=${format}`;
+        let url = `${API_URL}/api/logs/export?format=${format}`;
         if (range.from) url += `&from=${range.from}`;
         if (range.to) url += `&to=${range.to}`;
         window.open(url, '_blank');
