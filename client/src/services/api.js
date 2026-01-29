@@ -10,6 +10,12 @@ const api = axios.create({
 // Request interceptor to add company ID
 api.interceptors.request.use(config => {
     const companyId = localStorage.getItem('selectedCompany');
+    const token = localStorage.getItem('token');
+
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+
     if (companyId && config.method !== 'get') {
         // For POST/PUT, add to body if JSON
         if (config.data && typeof config.data === 'object') {
