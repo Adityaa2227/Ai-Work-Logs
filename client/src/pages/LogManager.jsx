@@ -5,7 +5,7 @@ import LogForm from '../components/LogForm';
 import ReadOnlyLogView from '../components/ReadOnlyLogView';
 import WeeklyLogs from '../components/WeeklyLogs';
 import MonthlyLogs from '../components/MonthlyLogs';
-import { Plus, Edit, Trash, Search, Calendar, Clock, Code, FileText, ChevronRight, CalendarDays, SparkleIcon } from 'lucide-react';
+import { Plus, Edit, Trash, Search, Calendar, Clock, Code, FileText, ChevronRight, ChevronLeft, CalendarDays, SparkleIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -23,6 +23,7 @@ const formatDate = (dateString) => {
 const LogManager = () => {
     const { selectedCompany } = useCompany();
     const [activeTab, setActiveTab] = useState('daily'); // 'daily', 'weekly', 'monthly'
+    const [page, setPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingLog, setEditingLog] = useState(null);
     const [viewingLog, setViewingLog] = useState(null);
@@ -30,9 +31,10 @@ const LogManager = () => {
     const queryClient = useQueryClient();
 
     const { data, isLoading } = useQuery({
-        queryKey: ['logs', search, selectedCompany?._id],
-        queryFn: () => getLogs({ search, company: selectedCompany?._id, limit: 1000 }),
-        enabled: !!selectedCompany
+        queryKey: ['logs', search, selectedCompany?._id, page], // Add page to query key
+        queryFn: () => getLogs({ search, company: selectedCompany?._id, limit: 12, page }),
+        enabled: !!selectedCompany,
+        keepPreviousData: true // Keep data while fetching new page
     });
 
     const deleteMutation = useMutation({
@@ -156,6 +158,7 @@ const LogManager = () => {
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
                  </div>
             ) : (
+                <>
                 <motion.div 
                     variants={containerVariants}
                     initial="hidden"
@@ -231,6 +234,31 @@ const LogManager = () => {
                             </motion.div>
                         ))}
                 </motion.div>
+
+                {/* Pagination Controls */}
+                <div className="flex justify-center items-center gap-4 mt-8">
+                    <button
+                        onClick={() => setPage((old) => Math.max(old - 1, 1))}
+                        disabled={page === 1}
+                        className="p-2 rounded-lg bg-surface border border-border text-text disabled:opacity-50 disabled:cursor-not-allowed hover:bg-border transition-colors"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <span className="text-muted font-medium">
+                        Page <span className="text-text">{page}</span> of <span className="text-text">{data?.pages || 1}</span>
+                    </span>
+                    <button
+                        onClick={() => {
+                            if (!data?.pages || page >= data.pages) return;
+                            setPage((old) => old + 1);
+                        }}
+                        disabled={!data?.pages || page >= data.pages}
+                        className="p-2 rounded-lg bg-surface border border-border text-text disabled:opacity-50 disabled:cursor-not-allowed hover:bg-border transition-colors"
+                    >
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
+                </div>
+                </>
             )}
                 </>
             )}
