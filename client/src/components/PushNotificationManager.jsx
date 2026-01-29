@@ -59,6 +59,14 @@ const PushNotificationManager = () => {
                 applicationServerKey: urlBase64ToUint8Array(vapidKey)
             });
 
+            // DEBUG: Check token
+            const token = localStorage.getItem('token');
+            console.log('Subscribing with token:', token);
+            if (!token) {
+                 toast.error('No login token found! Please logout and login again.');
+                 return;
+            }
+
             await api.post('/notifications/subscribe', subscription);
             
             setIsSubscribed(true);
