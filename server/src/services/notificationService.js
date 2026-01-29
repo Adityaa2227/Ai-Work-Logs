@@ -2,11 +2,15 @@ const cron = require('node-cron');
 const webpush = require('web-push');
 const Subscription = require('../models/Subscription');
 
-webpush.setVapidDetails(
-    'mailto:aditya@example.com',
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-);
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(
+        'mailto:aditya@example.com',
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+} else {
+    console.warn('VAPID Keys not found. Web Push notifications will not work.');
+}
 
 const sendPush = async (payload) => {
     try {
