@@ -11,7 +11,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       strategies: 'injectManifest',
-      srcDir: 'public',
+      srcDir: 'src',
       filename: 'sw.js',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
