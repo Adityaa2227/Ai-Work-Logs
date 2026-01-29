@@ -26,9 +26,6 @@ const Layout = () => {
 
     return (
         <div className="flex h-screen bg-bg overflow-hidden font-sans text-text">
-import PushNotificationManager from './PushNotificationManager';
-
-// ... inside Layout return ...
 
             {/* Mobile Header */}
             <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-40 flex items-center justify-between px-4">
