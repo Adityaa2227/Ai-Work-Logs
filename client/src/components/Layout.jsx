@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, BarChart2, Download, Settings, Menu, TrendingUp } from 'lucide-react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, FileText, BarChart2, Download, Settings, Menu, TrendingUp, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 
@@ -10,6 +10,13 @@ import PushNotificationManager from './PushNotificationManager';
 const Layout = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+    };
 
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -107,7 +114,15 @@ const Layout = () => {
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-border mt-auto">
+                <div className="p-4 border-t border-border mt-auto space-y-4">
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-3.5 rounded-xl text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors group"
+                    >
+                        <LogOut className="w-5 h-5 mr-3 group-hover:text-red-500 transition-colors" />
+                        <span className="font-medium">Logout</span>
+                    </button>
+
                     <div className="bg-gradient-to-br from-accent to-accentHover rounded-2xl p-4 text-white shadow-lg shadow-accent/20">
                         <h4 className="font-semibold text-sm">Pro Tip</h4>
                         <p className="text-xs text-white/80 mt-1">Use AI Analytics to boost your productivity by 20%.</p>
