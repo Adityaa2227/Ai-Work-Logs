@@ -91,7 +91,7 @@ const LogForm = ({ log, onSuccess, readOnly = false }) => {
                         disabled={readOnly}
                         className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
                             status === s 
-                            ? 'bg-accent text-white shadow-lg shadow-accent/20' 
+                            ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' 
                             : 'text-muted hover:text-text hover:bg-card'
                         } ${readOnly ? 'cursor-not-allowed opacity-60' : ''}`}
                     >
