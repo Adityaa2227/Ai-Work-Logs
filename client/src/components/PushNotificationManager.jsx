@@ -4,7 +4,9 @@ import { toast } from 'sonner';
 import { useCompany } from '../context/CompanyContext'; // Using this just for context if needed, or api directly
 import api from '../services/api';
 
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+// Hardcoded for debugging to ensure env var isn't the issue
+const VAPID_PUBLIC_KEY = 'BI5XOQv_k8yNiDX9PtSW0hsNhjk2FoIQ-SSEjqGB7YUo7ljFEKjkdqxw_PGaLhcaAWoTp2d4SmHHmRZPURUblSM';
+// const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
 const urlBase64ToUint8Array = (base64String) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
