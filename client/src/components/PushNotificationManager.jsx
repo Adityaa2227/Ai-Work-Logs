@@ -78,6 +78,25 @@ const PushNotificationManager = () => {
         }
     };
 
+    const unsubscribeUser = async () => {
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+            
+            if (subscription) {
+                await subscription.unsubscribe();
+                // Optional: Notify server to delete subscription
+                // await api.post('/notifications/unsubscribe', subscription); 
+            }
+
+            setIsSubscribed(false);
+            toast.success('Notifications disabled.');
+        } catch (error) {
+            console.error('Error unsubscribing', error);
+            toast.error('Failed to disable notifications');
+        }
+    };
+
     const handleToggle = async () => {
         if (permission === 'denied') {
             toast.error('Notifications are blocked. Please enable them in your browser settings.');
@@ -85,9 +104,7 @@ const PushNotificationManager = () => {
         }
 
         if (isSubscribed) {
-            // Unsubscribe logic could be added here, but usually just clearing SW sub is enough
-            // For now, we will just focus on subscribing
-             toast.info('You are already subscribed.');
+            await unsubscribeUser();
         } else {
             await subscribeUser();
         }
