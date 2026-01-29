@@ -4,9 +4,7 @@ import { toast } from 'sonner';
 import { useCompany } from '../context/CompanyContext'; // Using this just for context if needed, or api directly
 import api from '../services/api';
 
-// Hardcoded for debugging to ensure env var isn't the issue
-const VAPID_PUBLIC_KEY = 'BI5XOQv_k8yNiDX9PtSW0hsNhjk2FoIQ-SSEjqGB7YUo7ljFEKjkdqxw_PGaLhcaAWoTp2d4SmHHmRZPURUblSM';
-// const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+
 
 const urlBase64ToUint8Array = (base64String) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -45,17 +43,20 @@ const PushNotificationManager = () => {
     };
 
     const subscribeUser = async () => {
-        if (!VAPID_PUBLIC_KEY) {
-            toast.error('VAPID Public Key not found. Cannot subscribe.');
-            return;
-        }
-
         try {
+            // Fetch VAPID Key from server
+            const { data } = await api.get('/notifications/vapid-public-key');
+            const vapidKey = data.publicKey;
+
+            if (!vapidKey) {
+                throw new Error('VAPID Public Key not found on server.');
+            }
+
             const registration = await navigator.serviceWorker.ready;
             
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                applicationServerKey: urlBase64ToUint8Array(vapidKey)
             });
 
             await api.post('/notifications/subscribe', subscription);
