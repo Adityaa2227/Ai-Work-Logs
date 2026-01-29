@@ -13,7 +13,7 @@ const WorkLogSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Available', 'No Work', 'Leave'],
+        enum: ['Available', 'No Work', 'Leave', 'Holiday'],
         default: 'Available',
         required: true
     },

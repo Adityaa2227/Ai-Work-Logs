@@ -77,7 +77,7 @@ const LogForm = ({ log, onSuccess, readOnly = false }) => {
 
 
 
-    const inputClasses = "w-full p-3 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all placeholder:text-muted/50 text-text hover:border-border/80";
+    const inputClasses = "w-full p-3 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-accent focus:border-accent focus:bg-accent/5 outline-none transition-all placeholder:text-muted/50 text-text hover:border-border/80";
     const textareaClasses = `${inputClasses} min-h-[100px] resize-y`;
 
     return (
