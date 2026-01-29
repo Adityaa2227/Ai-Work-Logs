@@ -1,4 +1,5 @@
 const Subscription = require('../models/Subscription');
+const webpush = require('web-push');
 
 // @desc    Get VAPID Public Key
 // @route   GET /api/notifications/vapid-public-key
