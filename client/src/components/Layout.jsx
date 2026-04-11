@@ -1,22 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, BarChart2, Download, Settings, Menu, TrendingUp, LogOut } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { LayoutDashboard, FileText, BarChart2, Download, TrendingUp, LogOut, Menu } from 'lucide-react';
+import { motion } from 'framer-motion';
 import clsx from 'clsx';
 
 import CompanySwitcher from './CompanySwitcher';
 import PushNotificationManager from './PushNotificationManager';
+import GlobalLogModal from './GlobalLogModal';
+
+const proTips = [
+    { title: 'Pro Tip', text: 'Log your learnings daily — they\'re gold for interviews.' },
+    { title: 'Consistency', text: 'A small daily log beats a big weekly one. Build the habit.' },
+    { title: 'Growth', text: 'Use AI Analytics to spot your improvement patterns.' },
+    { title: 'Prep', text: 'Your exported logs are perfect for performance reviews.' },
+    { title: 'Speed', text: 'Press Ctrl+M on the Logs page to quickly create entries.' },
+];
 
 const Layout = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [tipIndex, setTipIndex] = useState(0);
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Get user info
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const username = user?.username || 'User';
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         navigate('/login');
     };
+
+    // Rotate tips
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTipIndex(prev => (prev + 1) % proTips.length);
+        }, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -115,6 +137,17 @@ const Layout = () => {
                 </nav>
 
                 <div className="p-4 border-t border-border mt-auto space-y-4">
+                    {/* User info */}
+                    <div className="flex items-center gap-3 px-3 py-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                            {username.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-text truncate">{username}</p>
+                            <p className="text-xs text-muted">Personal</p>
+                        </div>
+                    </div>
+
                     <button
                         onClick={handleLogout}
                         className="flex items-center w-full px-4 py-3.5 rounded-xl text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors group"
@@ -123,10 +156,16 @@ const Layout = () => {
                         <span className="font-medium">Logout</span>
                     </button>
 
-                    <div className="bg-gradient-to-br from-accent to-accentHover rounded-2xl p-4 text-white shadow-lg shadow-accent/20">
-                        <h4 className="font-semibold text-sm">Pro Tip</h4>
-                        <p className="text-xs text-white/80 mt-1">Use AI Analytics to boost your productivity by 20%.</p>
-                    </div>
+                    {/* Rotating Pro Tip */}
+                    <motion.div 
+                        key={tipIndex}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gradient-to-br from-accent to-accentHover rounded-2xl p-4 text-white shadow-lg shadow-accent/20"
+                    >
+                        <h4 className="font-semibold text-sm">{proTips[tipIndex].title}</h4>
+                        <p className="text-xs text-white/80 mt-1">{proTips[tipIndex].text}</p>
+                    </motion.div>
                 </div>
             </aside>
 
@@ -142,9 +181,10 @@ const Layout = () => {
                    </motion.div>
                 </div>
             </main>
+
+            <GlobalLogModal />
         </div>
     );
 };
 
 export default Layout;
-

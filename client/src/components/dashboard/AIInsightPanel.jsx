@@ -12,7 +12,7 @@ const AIInsightPanel = ({ insight }) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
-            className="w-full bg-gradient-to-r from-violet-900/50 to-indigo-900/50 p-1 rounded-3xl"
+            className="w-full bg-gradient-to-r from-amber-900/50 to-orange-900/50 p-1 rounded-3xl"
         >
             <div className="bg-card/80 backdrop-blur-xl p-6 rounded-[22px] border border-white/10 relative overflow-hidden">
                 {/* Glow effects */}
@@ -42,7 +42,7 @@ const AIInsightPanel = ({ insight }) => {
 
                     <button 
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className="mt-4 text-sm font-medium text-violet-400 hover:text-violet-300 flex items-center gap-2 transition-colors"
+                        className="mt-4 text-sm font-medium text-amber-400 hover:text-amber-300 flex items-center gap-2 transition-colors"
                     >
                         <Sparkles className="w-4 h-4" />
                         {isExpanded ? 'Show Less' : 'View Full Analysis'}

@@ -13,7 +13,7 @@ const RecentActivity = ({ logs }) => {
         >
             <div className="flex items-center justify-between mb-6">
                 <h3 className="font-bold text-lg text-text">Recent Activity</h3>
-                <Link to="/logs" className="text-sm text-accent hover:text-indigo-400 flex items-center gap-1 transition-colors">
+                <Link to="/logs" className="text-sm text-accent hover:text-orange-400 flex items-center gap-1 transition-colors">
                     View All <ArrowRight className="w-4 h-4" />
                 </Link>
             </div>
@@ -22,7 +22,7 @@ const RecentActivity = ({ logs }) => {
                 {logs?.map((log, index) => (
                     <div key={log._id} className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 cursor-pointer group">
                         <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700">
-                            <Clock className="w-5 h-5 text-indigo-400" />
+                            <Clock className="w-5 h-5 text-orange-400" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-start mb-1">

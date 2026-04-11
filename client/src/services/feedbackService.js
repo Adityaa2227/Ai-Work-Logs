@@ -1,10 +1,8 @@
-import axios from 'axios';
+import api from './api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-export const getLatestFeedback = async () => {
+export const getLatestFeedback = async (company) => {
     try {
-        const response = await axios.get(`${API_URL}/feedback/latest`);
+        const response = await api.get(`/feedback/latest?company=${company}`);
         return response.data;
     } catch (error) {
         console.error('Error fetching latest feedback:', error);
@@ -12,9 +10,9 @@ export const getLatestFeedback = async () => {
     }
 };
 
-export const generateFeedback = async () => {
+export const generateFeedback = async (company) => {
     try {
-        const response = await axios.post(`${API_URL}/feedback/generate`);
+        const response = await api.post(`/feedback/generate`, { company });
         return response.data;
     } catch (error) {
         console.error('Error generating feedback:', error);

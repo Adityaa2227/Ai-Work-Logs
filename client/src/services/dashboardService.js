@@ -12,12 +12,18 @@ export const getChartData = async (range = 7, companyId) => {
     return response.data;
 };
 
+export const getHeatmapData = async (companyId) => {
+    if(!companyId) return null;
+    const response = await api.get(`/stats/heatmap?company=${companyId}`);
+    return response.data;
+};
+
 export const getLatestAIInsight = async () => {
     try {
         const response = await api.get('/ai/latest');
         return response.data;
     } catch (error) {
-        return null; // Return null if 404 or error
+        return null;
     }
 };
 

@@ -25,7 +25,7 @@ const protect = async (req, res, next) => {
 
     if (!token) {
         console.log('Auth Middleware: No token found. Headers:', req.headers);
-        res.status(401).json({ message: 'Not authorized, no token' });
+        return res.status(401).json({ message: 'Not authorized, no token' });
     }
 };
 

@@ -10,6 +10,16 @@ const CompanySchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    // Used to configure which fields are active on the Log Form
+    logTemplate: {
+        visibleFields: {
+            filesTouched: { type: Boolean, default: true },
+            blockers: { type: Boolean, default: true },
+            learnings: { type: Boolean, default: true },
+            impact: { type: Boolean, default: true }
+        },
+        customFields: [{ type: String }] // e.g. ["Meetings", "PRs"]
     }
 });
 

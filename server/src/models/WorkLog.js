@@ -67,6 +67,11 @@ const WorkLogSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    customFields: {
+        type: Map,
+        of: String,
+        default: {}
     }
 });
 

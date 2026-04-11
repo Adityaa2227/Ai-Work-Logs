@@ -88,8 +88,8 @@ const WeeklyLogs = () => {
                         className={`w-full p-6 flex items-center justify-between hover:bg-white/5 transition-colors text-left cursor-pointer ${editingId ? 'cursor-default' : ''}`}
                     >
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                                <Calendar className="w-6 h-6 text-indigo-400" />
+                            <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                                <Calendar className="w-6 h-6 text-orange-400" />
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-text">

@@ -56,13 +56,61 @@ export const CompanyProvider = ({ children }) => {
         }
     });
 
+    const [isGlobalFormOpen, setIsGlobalFormOpen] = useState(false);
+    const [globalFormPreset, setGlobalFormPreset] = useState(null); // { date: null, editingLog: null }
+
+    const openGlobalForm = (preset = null) => {
+        setGlobalFormPreset(preset);
+        setIsGlobalFormOpen(true);
+    };
+
+    const closeGlobalForm = () => {
+        setIsGlobalFormOpen(false);
+        setGlobalFormPreset(null);
+    };
+
+    // Global Keydown for Ctrl+M
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+                e.preventDefault();
+                openGlobalForm();
+            }
+            if (e.key === 'Escape' && isGlobalFormOpen) {
+                closeGlobalForm();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isGlobalFormOpen]);
+
+    const updateCompanyMutation = useMutation({
+        mutationFn: async ({ id, data }) => {
+            const res = await api.put(`/companies/${id}`, data);
+            return res.data;
+        },
+        onSuccess: (updatedData) => {
+            queryClient.invalidateQueries(['companies']);
+            setSelectedCompany(updatedData);
+            toast.success('Template settings saved');
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || 'Failed to update settings');
+        }
+    });
+
     return (
         <CompanyContext.Provider value={{ 
             companies, 
             selectedCompany, 
             selectCompany, 
             createCompany: createMutation.mutate,
-            isLoading 
+            updateCompany: updateCompanyMutation.mutate,
+            isLoading,
+            isGlobalFormOpen,
+            globalFormPreset,
+            openGlobalForm,
+            closeGlobalForm
         }}>
             {children}
         </CompanyContext.Provider>

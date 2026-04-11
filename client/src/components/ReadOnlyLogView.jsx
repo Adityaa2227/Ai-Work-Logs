@@ -109,6 +109,20 @@ const ReadOnlyLogView = ({ log }) => {
                             <p className="text-text leading-relaxed">{log.nextPlan}</p>
                         </Section>
                     )}
+
+                    {/* Custom Fields */}
+                    {log.customFields && Object.keys(log.customFields).length > 0 && (
+                        <div className="grid grid-cols-1 gap-6 border-t border-border/50 pt-6 mt-6">
+                            <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Custom Fields</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {Object.entries(log.customFields).map(([key, value]) => (
+                                    <Section key={key} icon={FileText} label={key}>
+                                        <p className="text-text leading-relaxed whitespace-pre-wrap">{value}</p>
+                                    </Section>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </>
             )}
         </div>

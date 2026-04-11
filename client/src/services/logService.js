@@ -25,6 +25,11 @@ export const getSuggestions = async (company) => {
     return response.data;
 };
 
+export const getLatestLog = async (company) => {
+    const response = await api.get('/logs/latest', { params: { company } });
+    return response.data;
+};
+
 // Summary services
 export const getWeeklySummaries = async (company) => {
     const response = await api.get('/summaries/weekly', { params: { company } });

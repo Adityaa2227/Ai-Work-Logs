@@ -64,6 +64,20 @@ exports.createLog = async (req, res) => {
             return res.status(400).json({ message: 'Company ID is required' });
         }
         
+        // Ensure only 1 log per day per company
+        const targetDate = new Date(date);
+        const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+        const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+
+        const existingLog = await WorkLog.findOne({
+            company,
+            date: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        if (existingLog) {
+            return res.status(400).json({ message: 'A log for this date already exists. Please edit it instead.' });
+        }
+
         const newLog = new WorkLog(req.body);
         const savedLog = await newLog.save();
         
@@ -152,6 +166,88 @@ exports.getSuggestions = async (req, res) => {
         const techStacks = [...new Set(logs.flatMap(log => log.techStack || []).filter(Boolean))];
 
         res.json({ projects, techStacks });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get the most recent log entry
+// @route   GET /api/logs/latest
+// @access  Public
+exports.getLatestLog = async (req, res) => {
+    try {
+        const { company } = req.query;
+        if (!company) {
+            return res.status(400).json({ message: 'Company ID is required' });
+        }
+
+        const latestLog = await WorkLog.findOne({ company, status: 'Available' })
+            .sort({ date: -1 })
+            .lean();
+
+        if (!latestLog) {
+            return res.json(null);
+        }
+
+        res.json(latestLog);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get pending/missed log dates
+// @route   GET /api/logs/pending
+// @access  Public
+exports.getPendingLogs = async (req, res) => {
+    try {
+        const { company } = req.query;
+        if (!company) {
+            return res.status(400).json({ message: 'Company ID is required' });
+        }
+
+        const Company = require('../models/Company');
+        const companyDoc = await Company.findById(company);
+        if (!companyDoc) {
+             return res.status(404).json({ message: 'Company not found' });
+        }
+
+        // Find the earliest log recorded for this company
+        const oldestLog = await WorkLog.findOne({ company }).sort({ date: 1 }).select('date');
+        
+        let startDate;
+        if (oldestLog) {
+            startDate = new Date(oldestLog.date);
+        } else {
+            // If no logs exist at all, we could just say no pending logs, or start from company creation
+            startDate = new Date(companyDoc.createdAt);
+        }
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date();
+        endDate.setHours(23, 59, 59, 999);
+
+        // Fetch all log dates in this range
+        const logs = await WorkLog.find({
+            company,
+            date: { $gte: startDate, $lte: endDate }
+        }).select('date');
+
+        const loggedDates = logs.map(l => new Date(l.date).toDateString());
+
+        let pendingDates = [];
+        let currDate = new Date(startDate);
+
+        while (currDate <= endDate) {
+            if (!loggedDates.includes(currDate.toDateString())) {
+                pendingDates.push(new Date(currDate));
+            }
+            currDate.setDate(currDate.getDate() + 1);
+        }
+
+        // Sort descending (most recent missing dates first)
+        pendingDates.sort((a, b) => b - a);
+
+        res.json(pendingDates);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -11,7 +11,8 @@ exports.getDashboardStats = async (req, res) => {
         const matchStage = { company: new mongoose.Types.ObjectId(company) };
 
         const now = new Date();
-        const startOfDay = new Date(now.setHours(0, 0, 0, 0));
+        const startOfDay = new Date(now);
+        startOfDay.setHours(0, 0, 0, 0);
         
         const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - now.getDay());
@@ -19,29 +20,32 @@ exports.getDashboardStats = async (req, res) => {
 
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        // Count logs instead of hours
+        // Counts
+        const totalLogs = await WorkLog.countDocuments(matchStage);
         const todayCount = await WorkLog.countDocuments({ ...matchStage, date: { $gte: startOfDay } });
         const weekCount = await WorkLog.countDocuments({ ...matchStage, date: { $gte: startOfWeek } });
         const monthCount = await WorkLog.countDocuments({ ...matchStage, date: { $gte: startOfMonth } });
+
+        // Learnings count
+        const learningsAgg = await WorkLog.aggregate([
+            { $match: { ...matchStage, status: 'Available' } },
+            { $project: { learningCount: { $size: { $ifNull: ['$learnings', []] } } } },
+            { $group: { _id: null, total: { $sum: '$learningCount' } } }
+        ]);
+        const totalLearnings = learningsAgg[0]?.total || 0;
 
         // Calculate Streak - consecutive days with logs
         const allLogs = await WorkLog.find(matchStage).select('date').sort({ date: -1 });
         const datesLogged = new Set(allLogs.map(l => new Date(l.date).toDateString()));
         
         let streak = 0;
-        let checkDate = new Date();
-        checkDate.setHours(0, 0, 0, 0);
-        
-        // Count consecutive days backwards from today
         for (let i = 0; i < 365; i++) {
             const d = new Date();
             d.setDate(d.getDate() - i);
             if (datesLogged.has(d.toDateString())) {
                 streak++;
             } else {
-                // If it's today and no log, check yesterday
                 if (i === 0) continue;
-                // Otherwise break the streak
                 break;
             }
         }
@@ -50,12 +54,25 @@ exports.getDashboardStats = async (req, res) => {
         const projects = await WorkLog.distinct('project', { ...matchStage, status: 'Available' });
         const projectCount = projects.filter(p => p && p.trim()).length;
 
+        // Top tech stacks
+        const topTechStacks = await WorkLog.aggregate([
+            { $match: { ...matchStage, status: 'Available' } },
+            { $unwind: '$techStack' },
+            { $match: { techStack: { $ne: '', $ne: null } } },
+            { $group: { _id: '$techStack', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 8 }
+        ]);
+
         res.json({
+            totalLogs,
             todayLogs: todayCount,
             weeklyLogs: weekCount,
             monthlyLogs: monthCount,
-            streak: streak,
-            projectDist: projects.filter(p => p && p.trim()).map(p => ({ name: p }))
+            totalLearnings,
+            streak,
+            projectDist: projects.filter(p => p && p.trim()).map(p => ({ name: p })),
+            topTechStacks: topTechStacks.map(t => ({ name: t._id, count: t.count }))
         });
 
     } catch (error) {
@@ -82,7 +99,7 @@ exports.getChartData = async (req, res) => {
             { 
                 $group: { 
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } }, 
-                    count: { $sum: 1 } // Count logs instead of hours
+                    count: { $sum: 1 }
                 } 
             },
             { $sort: { _id: 1 } }
@@ -97,7 +114,7 @@ exports.getChartData = async (req, res) => {
              const found = dailyActivity.find(a => a._id === dateStr);
              filledDaily.push({
                  date: dateStr,
-                 logs: found ? found.count : 0 // Changed from hours to logs
+                 logs: found ? found.count : 0
              });
         }
         filledDaily.reverse();
@@ -106,7 +123,7 @@ exports.getChartData = async (req, res) => {
         const projectDist = await WorkLog.aggregate([
              { $match: { ...matchStage, status: 'Available' } },
              { $group: { _id: "$project", count: { $sum: 1 } } },
-             { $match: { _id: { $ne: null, $ne: '' } } } // Filter out null/empty projects
+             { $match: { _id: { $ne: null, $ne: '' } } }
         ]);
 
         // 3. Tech Stack Stats - Count usage
@@ -124,6 +141,50 @@ exports.getChartData = async (req, res) => {
             focusStats: techStackStats.map(t => ({ name: t._id, count: t.count }))
         });
 
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.getHeatmapData = async (req, res) => {
+    try {
+        const { company } = req.query;
+        if (!company) {
+            return res.status(400).json({ message: 'Company ID is required' });
+        }
+        const matchStage = { company: new mongoose.Types.ObjectId(company) };
+
+        // Last 84 days (12 weeks)
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 84);
+        startDate.setHours(0, 0, 0, 0);
+
+        const dailyActivity = await WorkLog.aggregate([
+            { $match: { ...matchStage, date: { $gte: startDate } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        // Build full 84-day grid
+        const heatmap = [];
+        for (let i = 83; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const found = dailyActivity.find(a => a._id === dateStr);
+            heatmap.push({
+                date: dateStr,
+                count: found ? found.count : 0,
+                day: d.getDay() // 0=Sun, 6=Sat
+            });
+        }
+
+        res.json(heatmap);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
