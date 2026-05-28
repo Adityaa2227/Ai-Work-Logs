@@ -57,14 +57,33 @@ async function generateAndSaveFeedback(company, res) {
         });
     }
 
-    const critique = await aiService.generateCritique(logs);
+    let critiqueResult;
+    try {
+        critiqueResult = await aiService.generateCritique(logs, company);
+    } catch (error) {
+        const quotaResponse = aiService.toQuotaResponse(error);
+        if (quotaResponse) {
+            return res.status(quotaResponse.statusCode).json({
+                content: quotaResponse.payload.content,
+                generatedAt: new Date(),
+                ...quotaResponse.payload
+            });
+        }
+        throw error;
+    }
 
     const newFeedback = new Feedback({
         company,
-        content: critique,
+        content: critiqueResult.content,
         type: 'critique'
     });
 
     await newFeedback.save();
-    res.json(newFeedback);
+    res.json({
+        ...newFeedback.toObject(),
+        status: critiqueResult.status,
+        provider: critiqueResult.provider,
+        message: critiqueResult.message,
+        quotaSafeguard: critiqueResult.quotaSafeguard
+    });
 }

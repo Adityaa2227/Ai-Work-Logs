@@ -59,16 +59,39 @@ Your goal:
 6. Keep it conversational, actionable, and under 200 words to save tokens.
         `;
 
-        const aiResponse = await aiService.generateCustomReport(prompt);
+        const aiResult = await aiService.generateCustomReport(prompt, {
+            companyId: company,
+            taskType: 'complex',
+            preferredProvider: 'gemini'
+        });
 
         // Save AI response
-        const aiMessage = await PPOChat.create({ company, role: 'ai', content: aiResponse });
+        const aiMessage = await PPOChat.create({ company, role: 'ai', content: aiResult.content });
 
-        res.json(aiMessage);
+        res.json({
+            ...aiMessage.toObject(),
+            status: aiResult.status,
+            provider: aiResult.provider,
+            message: aiResult.message,
+            quotaSafeguard: aiResult.quotaSafeguard
+        });
     } catch (error) {
         console.error('PPO Coach Error:', error);
         
         const { company } = req.body;
+        const quotaResponse = aiService.toQuotaResponse(error);
+        if (quotaResponse) {
+            const aiMessage = await PPOChat.create({
+                company,
+                role: 'ai',
+                content: quotaResponse.payload.content
+            });
+            return res.status(quotaResponse.statusCode).json({
+                ...aiMessage.toObject(),
+                ...quotaResponse.payload
+            });
+        }
+
         // If quota exceeded, save a system message so user knows their update is safe
         if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('Limit')) {
             const aiMessage = await PPOChat.create({ 

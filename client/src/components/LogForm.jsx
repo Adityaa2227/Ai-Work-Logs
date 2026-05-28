@@ -8,7 +8,6 @@ import {
     Image, Trash2, Upload, CheckCircle2, AlertTriangle, Play
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import TemplateConfigModal from './TemplateConfigModal';
 
@@ -32,7 +31,7 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
     const [status, setStatus] = useState(log?.status || 'Available');
     
     // Multi-tab active tab state
-    const [activeTab, setActiveTab] = useState('core'); // 'ai', 'core', 'system', 'metrics', 'safety'
+    const [activeTab, setActiveTab] = useState(log ? 'core' : 'ai'); // 'ai', 'core', 'system', 'metrics', 'safety'
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
     const [isStructuring, setIsStructuring] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -137,6 +136,20 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
         }
     }, [latestLog, log, readOnly]);
 
+    useEffect(() => {
+        if (!latestLog || log || readOnly) return;
+
+        setFormData(prev => ({
+            ...prev,
+            systemsModules: prev.systemsModules || latestLog.systemsModules?.join(', ') || '',
+            apisModified: prev.apisModified || latestLog.apisModified?.join(', ') || '',
+            technologiesUsed: prev.technologiesUsed || latestLog.technologiesUsed?.join(', ') || latestLog.techStack?.join(', ') || '',
+            databasesTouched: prev.databasesTouched || latestLog.databasesTouched?.join(', ') || '',
+            infraServices: prev.infraServices || latestLog.infraServices?.join(', ') || '',
+            sprint: prev.sprint || latestLog.sprint || ''
+        }));
+    }, [latestLog, log, readOnly]);
+
     const mutation = useMutation({
         mutationFn: (data) => log ? updateLog(log._id, data) : createLog(data),
         onSuccess: () => {
@@ -160,10 +173,13 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
         }
 
         setIsStructuring(true);
-        toast.promise(structureRawNotes(rawNotes), {
+        toast.promise(structureRawNotes(rawNotes, selectedCompany?._id), {
             loading: 'Senior Engineer AI parsing raw notes...',
             success: (parsed) => {
                 setIsStructuring(false);
+                if (parsed?.quotaSafeguard) {
+                    return parsed.message || 'AI parsing was safely queued. Please complete this log manually for now.';
+                }
                 if (parsed) {
                     setFormData(prev => ({
                         ...prev,
@@ -206,6 +222,9 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
             error: (err) => {
                 setIsStructuring(false);
                 console.error(err);
+                if (err.response?.data?.quotaSafeguard) {
+                    return err.response.data.message || 'AI parsing was safely queued. Please complete this log manually for now.';
+                }
                 return 'AI parsing failed. Please complete manually.';
             }
         });
@@ -407,9 +426,9 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
 
     const currentTheme = tabThemeClasses[activeTab] || tabThemeClasses.core;
 
-    const inputClasses = "w-full p-2.5 premium-input font-sans text-xs transition-all border border-border/40 focus:border-indigo-400/40 bg-zinc-900/40";
-    const textareaClasses = "w-full p-2.5 premium-input min-h-[70px] resize-y font-sans text-xs transition-all border border-border/40 focus:border-indigo-400/40 bg-zinc-900/40";
-    const monoTextareaClasses = "w-full p-3 premium-input min-h-[140px] resize-y font-mono text-xs text-teal-400 bg-slate-950/80 border border-teal-500/20 glow-teal focus:border-teal-500/40 focus:ring-0";
+    const inputClasses = "w-full p-3 min-h-11 premium-input font-sans text-sm transition-colors border border-border/40 focus:border-indigo-400/40 bg-zinc-900/40";
+    const textareaClasses = "w-full p-3 premium-input min-h-[104px] resize-y font-sans text-sm transition-colors border border-border/40 focus:border-indigo-400/40 bg-zinc-900/40 leading-relaxed";
+    const monoTextareaClasses = "w-full p-4 premium-input min-h-[430px] resize-y font-mono text-sm text-teal-300 bg-slate-950/90 border border-teal-500/20 focus:border-teal-500/40 focus:ring-0 leading-relaxed";
 
     const PREDEFINED_TECH = ['Spring Boot', 'Kafka', 'Redis', 'PostgreSQL', 'MongoDB', 'Docker', 'Kubernetes', 'AWS', 'gRPC', 'Java', 'Node.js'];
     const PREDEFINED_SYSTEMS = ['Payment Orchestrator', 'BNPL service', 'Webhook handler', 'caching Engine', 'Checkout flow', 'API gateway'];
@@ -426,6 +445,14 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
         safety: '🛡️ Retro'
     };
 
+    const cleanTabLabels = {
+        ai: 'AI Dump',
+        core: 'Core',
+        system: 'Systems',
+        metrics: 'Agile',
+        safety: 'Retro'
+    };
+
     const handleNextTab = () => {
         const idx = tabList.indexOf(activeTab);
         if (idx < tabList.length - 1) {
@@ -439,6 +466,17 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
             setActiveTab(tabList[idx - 1]);
         }
     };
+
+    const requiredReady = Boolean(formData.project.trim() && formData.task.trim() && formData.workDone.trim() && formData.nextPlan.trim());
+    const parsedSignalCount = [
+        formData.project,
+        formData.task,
+        formData.workDone,
+        formData.systemsModules,
+        formData.technologiesUsed,
+        formData.jiraTicket,
+        formData.nextPlan
+    ].filter(value => String(value || '').trim()).length;
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -481,9 +519,9 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
                     )}
                 </div>
             ) : (
-                <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+                <form onSubmit={handleSubmit} className="flex flex-col min-h-0">
                     {/* Modern Top Horizontal Wizard Navigation */}
-                    <div className="flex border-b border-border/30 bg-card/25 rounded-lg p-0.5 mb-4 shrink-0 overflow-x-auto scrollbar-hide gap-1">
+                    <div className="grid grid-cols-5 border border-border/40 bg-zinc-950/30 rounded-lg p-1 mb-3 shrink-0 gap-1">
                         {tabList.map((tab) => {
                             const isCurrent = activeTab === tab;
                             const theme = tabThemeClasses[tab];
@@ -492,70 +530,122 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
                                     key={tab}
                                     type="button"
                                     onClick={() => setActiveTab(tab)}
-                                    className={`flex-1 min-w-[75px] py-2 px-1.5 rounded-md flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider transition-all border border-transparent ${
+                                    className={`min-w-0 py-2 px-1.5 rounded-md flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors border border-transparent ${
                                         isCurrent 
                                             ? theme.active
                                             : 'text-muted hover:text-text hover:bg-surface/30'
                                     }`}
                                 >
                                     {renderTabIndicator(tab)}
-                                    <span className="truncate">{tabLabels[tab]}</span>
+                                    <span className="truncate">{cleanTabLabels[tab]}</span>
                                 </button>
                             );
                         })}
                     </div>
 
                     {/* Active Tab Panels (Inner scroll container - strictly single scrollbar) */}
-                    <div className="flex-1 overflow-y-auto pr-1 min-h-0 space-y-4 pb-4">
-                        <AnimatePresence mode="wait">
-                            <motion.div
+                    <div className="overflow-y-auto pr-1 max-h-[calc(100vh-170px)] pb-3">
+                            <div
                                 key={activeTab}
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -5 }}
-                                transition={{ duration: 0.15 }}
-                                className={`p-4 rounded-xl border border-border/35 bg-card/20 transition-all duration-300 ${currentTheme.glow}`}
+                                className="p-4 md:p-5 rounded-lg border border-border/35 bg-zinc-950/20"
                             >
                                 {/* PANEL 1: AI PARSING DUMP */}
                                 {activeTab === 'ai' && (
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between border-b border-border/20 pb-2">
-                                            <div className="flex items-center gap-2">
-                                                <Sparkles className="w-4 h-4 text-teal-400" />
-                                                <h3 className="text-xs font-bold text-teal-400 uppercase tracking-widest">Fast AI Log Engine</h3>
+                                    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.6fr)_360px] gap-4">
+                                        <div className="space-y-3">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/20 pb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="p-2 rounded-lg bg-teal-500/10 border border-teal-500/20">
+                                                        <Sparkles className="w-4 h-4 text-teal-300" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-sm font-bold text-text">Dump your whole day here</h3>
+                                                        <p className="text-[11px] text-muted mt-0.5">Terminal notes, standup text, commits, tickets, blockers, tomorrow plan.</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAIStructure}
+                                                    disabled={isStructuring || !rawNotes.trim()}
+                                                    className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
+                                                >
+                                                    {isStructuring ? (
+                                                        <div className="animate-spin h-3.5 w-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full" />
+                                                    ) : (
+                                                        <Brain className="w-3.5 h-3.5" />
+                                                    )}
+                                                    <span>{isStructuring ? 'Structuring...' : 'Structure with AI'}</span>
+                                                </button>
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={handleAIStructure}
-                                                disabled={isStructuring || !rawNotes.trim()}
-                                                className="bg-teal-500/10 hover:bg-teal-505 hover:bg-teal-500 hover:text-slate-950 border border-teal-500/30 text-teal-400 px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase transition-all duration-150 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                                            >
-                                                {isStructuring ? (
-                                                    <div className="animate-spin h-3.5 w-3.5 border-2 border-teal-400/30 border-t-teal-400 rounded-full" />
-                                                ) : (
-                                                    <Brain className="w-3.5 h-3.5" />
-                                                )}
-                                                <span>Parse Raw Notes</span>
-                                            </button>
+
+                                            <div className="relative">
+                                                <textarea
+                                                    disabled={readOnly}
+                                                    placeholder={'Paste everything here...\n\nExample:\n- worked on FINERACT callback retry handler\n- PAY-1234, PR #456\n- changed paymentCallbackController.js and retryWorker.js\n- added tests for 429 timeout retry\n- blocker: sandbox webhook was flaky\n- tomorrow: finish integration test and raise PR'}
+                                                    className={monoTextareaClasses}
+                                                    value={rawNotes}
+                                                    onChange={e => setRawNotes(e.target.value)}
+                                                />
+                                                <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 text-[9px] font-bold text-teal-400/50 uppercase select-none">
+                                                    <Terminal className="w-3 h-3" />
+                                                    <span>{rawNotes.length} chars</span>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <p className="text-[11px] text-muted leading-relaxed">
-                                            Paste raw command histories, code snippets, git commits, or slack daily summaries below. The Senior AI Copilot will automatically structure all metadata tabs.
-                                        </p>
-
-                                        <div className="relative">
-                                            <textarea
-                                                disabled={readOnly}
-                                                placeholder="[Terminal logs, git commits, raw thoughts...]"
-                                                className={monoTextareaClasses}
-                                                value={rawNotes}
-                                                onChange={e => setRawNotes(e.target.value)}
-                                            />
-                                            <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 text-[9px] font-bold text-teal-400/50 uppercase select-none">
-                                                <Terminal className="w-3 h-3" />
-                                                <span>Live Console</span>
+                                        <aside className="space-y-3">
+                                            <div className="bg-card border border-border rounded-lg p-3">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[11px] font-bold text-muted uppercase tracking-wider">Auto-fill readiness</span>
+                                                    <span className={`badge ${requiredReady ? 'badge-success' : 'badge-warning'}`}>
+                                                        {requiredReady ? 'Ready' : 'Needs review'}
+                                                    </span>
+                                                </div>
+                                                <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                                                    <div className="bg-surface/40 rounded-md p-2 border border-border/30">
+                                                        <span className="text-muted block text-[10px] uppercase">Signals</span>
+                                                        <span className="text-text font-mono text-lg">{parsedSignalCount}/7</span>
+                                                    </div>
+                                                    <div className="bg-surface/40 rounded-md p-2 border border-border/30">
+                                                        <span className="text-muted block text-[10px] uppercase">Work items</span>
+                                                        <span className="text-text font-mono text-lg">{formData.workDone.split('\n').filter(Boolean).length}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+
+                                            <div className="bg-card border border-border rounded-lg p-3 space-y-2">
+                                                <span className="text-[11px] font-bold text-muted uppercase tracking-wider">Current extract</span>
+                                                {[
+                                                    ['Project', formData.project],
+                                                    ['Task', formData.task],
+                                                    ['Ticket', formData.jiraTicket],
+                                                    ['Systems', formData.systemsModules],
+                                                    ['Next', formData.nextPlan]
+                                                ].map(([label, value]) => (
+                                                    <div key={label} className="border-b border-border/20 last:border-0 pb-2 last:pb-0">
+                                                        <span className="text-[10px] text-muted uppercase block">{label}</span>
+                                                        <span className="text-xs text-text line-clamp-2">{value || 'Not filled yet'}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setActiveTab('core')}
+                                                    className="px-3 py-2 rounded-lg bg-surface border border-border text-xs font-semibold text-text hover:border-zinc-500 transition-colors"
+                                                >
+                                                    Review Core
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setActiveTab('system')}
+                                                    className="px-3 py-2 rounded-lg bg-surface border border-border text-xs font-semibold text-text hover:border-zinc-500 transition-colors"
+                                                >
+                                                    Review Systems
+                                                </button>
+                                            </div>
+                                        </aside>
                                     </div>
                                 )}
 
@@ -797,9 +887,9 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
                                         </div>
 
                                         {/* Counters */}
-                                        <div className="border border-border/20 rounded-lg p-3 bg-zinc-950/20 space-y-3">
-                                            <span className="text-[10px] font-bold text-muted uppercase block tracking-wider">Metrics Counters</span>
-                                            <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                                        <div className="border border-border/20 rounded-lg p-4 bg-zinc-950/20 space-y-4">
+                                            <span className="text-xs font-bold text-muted uppercase block tracking-wider">Metrics Counters</span>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
                                                 {[
                                                     { field: 'bugsFixed', label: 'Bugs Fixed' },
                                                     { field: 'featuresImplemented', label: 'Features Done' },
@@ -808,9 +898,9 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
                                                     { field: 'meetingsAttended', label: 'Meetings' },
                                                     { field: 'testsWritten', label: 'Tests Written' }
                                                 ].map(item => (
-                                                    <div key={item.field} className="bg-surface/30 border border-border/30 p-2 rounded-lg text-center space-y-1">
-                                                        <span className="text-[9px] font-bold text-muted uppercase block">{item.label}</span>
-                                                        <div className="flex items-center justify-center gap-1.5">
+                                                    <div key={item.field} className="bg-surface/30 border border-border/30 p-3 rounded-lg text-center space-y-2 min-h-[96px] flex flex-col justify-center">
+                                                        <span className="text-[11px] font-bold text-muted uppercase block leading-tight">{item.label}</span>
+                                                        <div className="flex items-center justify-center gap-3">
                                                             <button
                                                                 type="button"
                                                                 disabled={readOnly}
@@ -821,11 +911,11 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
                                                                         [item.field]: Math.max(0, (formData.activities[item.field] || 0) - 1)
                                                                     }
                                                                 })}
-                                                                className="text-xs font-black text-muted hover:text-rose-500 w-4 h-4 flex items-center justify-center bg-card rounded"
+                                                                className="text-base font-black text-muted hover:text-rose-500 w-8 h-8 flex items-center justify-center bg-card border border-border/40 rounded-md disabled:opacity-40"
                                                             >
                                                                 -
                                                             </button>
-                                                            <span className="text-[11px] font-extrabold text-text font-mono">
+                                                            <span className="text-xl font-extrabold text-text font-mono min-w-6 text-center">
                                                                 {formData.activities[item.field] || 0}
                                                             </span>
                                                             <button
@@ -838,7 +928,7 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
                                                                         [item.field]: (formData.activities[item.field] || 0) + 1
                                                                     }
                                                                 })}
-                                                                className="text-xs font-black text-muted hover:text-emerald-500 w-4 h-4 flex items-center justify-center bg-card rounded"
+                                                                className="text-base font-black text-muted hover:text-emerald-500 w-8 h-8 flex items-center justify-center bg-card border border-border/40 rounded-md disabled:opacity-40"
                                                             >
                                                                 +
                                                             </button>
@@ -977,12 +1067,11 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
                                         </div>
                                     </div>
                                 )}
-                            </motion.div>
-                        </AnimatePresence>
+                            </div>
                     </div>
 
                     {/* Navigation Wizard Footer (Sticky control panel) */}
-                    <div className="flex justify-between items-center py-3 border-t border-border/20 bg-slate-900/90 backdrop-blur-sm shrink-0 gap-3 mt-auto">
+                    <div className="flex justify-between items-center pt-3 border-t border-border/20 bg-card shrink-0 gap-3">
                         <div className="flex gap-2">
                             <button
                                 type="button"
@@ -1002,7 +1091,28 @@ const LogForm = ({ log, onSuccess, readOnly = false, presetDate = null }) => {
                             </button>
                         </div>
 
-                        {!readOnly && (
+                        {!readOnly && activeTab === 'ai' && (
+                            <button
+                                type="button"
+                                onClick={handleAIStructure}
+                                disabled={isStructuring || !rawNotes.trim()}
+                                className="flex-1 py-2 rounded-xl font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors text-slate-950 bg-teal-400 hover:bg-teal-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                {isStructuring ? (
+                                    <>
+                                        <div className="animate-spin h-3.5 w-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full" />
+                                        <span>Structuring Log...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Brain className="w-3.5 h-3.5" />
+                                        <span>Structure and Review</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+
+                        {!readOnly && activeTab !== 'ai' && (
                             <button
                                 type="submit"
                                 disabled={mutation.isPending || isStructuring}

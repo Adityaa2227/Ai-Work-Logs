@@ -11,6 +11,10 @@ const CompanySchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    aiCalls: {
+        type: Number,
+        default: 0
+    },
     // Used to configure which fields are active on the Log Form
     logTemplate: {
         visibleFields: {

@@ -57,8 +57,8 @@ export const updateSummary = async (id, content) => {
 };
 
 // Raw Notes AI structuring
-export const structureRawNotes = async (rawNotes) => {
-    const response = await api.post('/logs/structure-notes', { rawNotes });
+export const structureRawNotes = async (rawNotes, company) => {
+    const response = await api.post('/logs/structure-notes', { rawNotes, company });
     return response.data;
 };
 
@@ -143,7 +143,14 @@ export const getImageKitAuthParams = async () => {
 };
 
 export const getDailyInsight = async (company) => {
-    const response = await api.post('/ai/insight', { company });
-    return response.data;
+    try {
+        const response = await api.post('/ai/insight', { company });
+        return response.data;
+    } catch (error) {
+        if (error.response?.data?.quotaSafeguard) {
+            return error.response.data;
+        }
+        throw error;
+    }
 };
 

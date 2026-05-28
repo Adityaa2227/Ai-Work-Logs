@@ -1,4 +1,5 @@
 const WorkLog = require('../models/WorkLog');
+const Company = require('../models/Company');
 const mongoose = require('mongoose');
 
 exports.getDashboardStats = async (req, res) => {
@@ -202,6 +203,7 @@ exports.getEngineeringStats = async (req, res) => {
 
         const companyId = new mongoose.Types.ObjectId(company);
         const matchStage = { company: companyId };
+        const companyDoc = await Company.findById(company).select('aiCalls');
 
         // 1. Total contribution logs
         const totalLogs = await WorkLog.countDocuments({ ...matchStage, status: 'Available' });
@@ -356,7 +358,8 @@ exports.getEngineeringStats = async (req, res) => {
             ownershipBreakdown,
             complexityBreakdown,
             activitiesSum,
-            activityTimeline
+            activityTimeline,
+            aiCalls: companyDoc?.aiCalls || 0
         });
 
     } catch (error) {

@@ -23,13 +23,17 @@ exports.generateReport = async (req, res) => {
             return res.status(404).json({ message: 'No logs found for this period' });
         }
 
-        const aiResponse = await aiService.generateSummary({ from, to, type: type || 'custom' }, logs);
+        const aiResponse = await aiService.generateSummary({ from, to, type: type || 'custom' }, logs, company);
 
         // If save is explicitly false, return without saving to DB
         if (req.body.save === false) {
             return res.json({
                 content: aiResponse.content,
-                generatedAt: aiResponse.generatedAt || new Date()
+                generatedAt: aiResponse.generatedAt || new Date(),
+                status: aiResponse.status,
+                provider: aiResponse.provider,
+                message: aiResponse.message,
+                quotaSafeguard: aiResponse.quotaSafeguard
             });
         }
 
@@ -68,7 +72,13 @@ exports.generateReport = async (req, res) => {
             generatedAt: aiResponse.generatedAt || new Date()
         });
 
-        res.json(summary);
+        res.json({
+            ...summary.toObject(),
+            status: aiResponse.status,
+            provider: aiResponse.provider,
+            message: aiResponse.message,
+            quotaSafeguard: aiResponse.quotaSafeguard
+        });
     } catch (error) {
         console.error('Error generating report:', error);
         res.status(500).json({ message: error.message });
@@ -120,9 +130,16 @@ exports.getInsight = async (req, res) => {
                 .limit(10);
         }
 
-        const insight = await aiService.generateInsight(logs);
-        res.json({ content: insight, generatedAt: new Date() });
+        const insight = await aiService.generateInsight(logs, company);
+        res.json({ ...insight, generatedAt: new Date() });
     } catch (error) {
+        const quotaResponse = aiService.toQuotaResponse(error);
+        if (quotaResponse) {
+            return res.status(quotaResponse.statusCode).json({
+                ...quotaResponse.payload,
+                generatedAt: new Date()
+            });
+        }
         res.status(500).json({ message: error.message });
     }
 };

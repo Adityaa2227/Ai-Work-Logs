@@ -55,10 +55,18 @@ const ManagerReview = () => {
         onSuccess: (newReport) => {
             queryClient.invalidateQueries(['savedReviews']);
             setActiveReport(newReport);
+            if (newReport?.quotaSafeguard) {
+                toast.info(newReport.message || 'AI quota safeguard activated. Your request was safely handled.');
+                return;
+            }
             toast.success('AI Contribution Report generated successfully!');
         },
         onError: (err) => {
             console.error(err);
+            if (err.response?.data?.quotaSafeguard) {
+                toast.info(err.response.data.message || 'AI quota safeguard activated. Your request was safely handled.');
+                return;
+            }
             toast.error(err.response?.data?.message || 'Failed to generate report using AI. Verify logs exist in range.');
         }
     });

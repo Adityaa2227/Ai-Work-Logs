@@ -18,7 +18,7 @@ const GlobalLogModal = () => {
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[100] flex justify-end">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-6">
                 {/* Backdrop */}
                 <motion.div 
                     initial={{ opacity: 0 }}
@@ -28,34 +28,36 @@ const GlobalLogModal = () => {
                     onClick={closeGlobalForm}
                 />
 
-                {/* Slide-over Panel */}
+                {/* Main workspace modal */}
                 <motion.div 
-                    initial={{ x: '100%' }}
-                    animate={{ x: 0 }}
-                    exit={{ x: '100%' }}
-                    transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
-                    className="relative z-10 w-full max-w-2xl bg-card border-l border-border/50 shadow-2xl flex flex-col h-full"
+                    initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 12, scale: 0.98 }}
+                    transition={{ type: 'tween', duration: 0.18, ease: 'easeOut' }}
+                    className="relative z-10 w-full max-w-7xl bg-card border border-border/60 shadow-2xl flex flex-col max-h-[96vh] rounded-xl overflow-hidden"
                 >
                     {/* Header */}
-                    <div className="flex justify-between items-center px-5 py-3.5 border-b border-border/50 shrink-0">
+                    <div className="flex justify-between items-start gap-4 px-5 md:px-6 py-3 border-b border-border/50 shrink-0 bg-zinc-950/25">
                         <div>
-                            <h2 className="text-base font-semibold text-text">
+                            <h2 className="text-base md:text-lg font-semibold text-text tracking-tight">
                                 {isViewing ? 'Entry Details' : isEditing ? 'Edit Entry' : 'New Log Entry'}
                             </h2>
-                            <p className="text-xs text-muted mt-0.5">
-                                {isViewing ? 'Review your work log details' : 'Capture your engineering progress'}
+                            <p className="text-xs text-muted mt-0.5 max-w-2xl leading-relaxed">
+                                {isViewing
+                                    ? 'Review the captured work, systems, outcomes, and notes for this day.'
+                                    : 'Dump your raw notes first, let AI structure the log, then quickly review the familiar fields before saving.'}
                             </p>
                         </div>
                         <button 
                             onClick={closeGlobalForm} 
-                            className="p-1.5 rounded-md hover:bg-surface text-muted hover:text-text transition-colors"
+                            className="p-2 rounded-md hover:bg-surface text-muted hover:text-text transition-colors shrink-0"
                         >
-                            <X className="w-4 h-4" />
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 flex flex-col min-h-0 px-5 py-4 overflow-hidden">
+                    <div className="flex-1 flex flex-col min-h-0 px-4 md:px-6 py-3 overflow-hidden">
                         {isViewing ? (
                             <div className="flex-1 overflow-y-auto scrollbar-hide">
                                 <ReadOnlyLogView log={globalFormPreset.viewingLog} />

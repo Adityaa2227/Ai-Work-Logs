@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getLogs, deleteLog } from '../services/logService';
 import api from '../services/api';
-import LogForm from '../components/LogForm';
-import ReadOnlyLogView from '../components/ReadOnlyLogView';
 import WeeklyLogs from '../components/WeeklyLogs';
 import MonthlyLogs from '../components/MonthlyLogs';
-import { Plus, Edit, Trash, Search, Calendar, ChevronRight, ChevronLeft, CalendarDays, SparkleIcon, FileText, Lightbulb, AlertCircle, CheckCircle, Clock, Server } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Edit, Trash, Search, Calendar, ChevronRight, ChevronLeft, CalendarDays, SparkleIcon, FileText, Lightbulb, AlertCircle, CheckCircle, Server, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useCompany } from '../context/CompanyContext';
@@ -28,11 +25,29 @@ const formatDate = (dateString) => {
     });
 };
 
+const getStatusBadge = (status) => {
+    if (status === 'Available') return 'badge-success';
+    if (status === 'No Work') return 'badge-warning';
+    return 'badge-error';
+};
+
+const getLogTitle = (log) => {
+    if (log.status !== 'Available') return log.noWorkReason || log.status;
+    return log.task || log.project || 'Untitled contribution';
+};
+
+const getLogSummary = (log) => {
+    if (log.status !== 'Available') return log.noWorkReason || 'No work details added';
+    if (Array.isArray(log.workDone) && log.workDone.length > 0) return log.workDone[0];
+    return log.nextPlan || 'No work summary added';
+};
+
 const LogManager = () => {
     const { selectedCompany, openGlobalForm } = useCompany();
     const [activeTab, setActiveTab] = useState('daily');
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
+    const [viewMode, setViewMode] = useState('grid');
     const queryClient = useQueryClient();
 
     const { data, isLoading } = useQuery({
@@ -85,6 +100,8 @@ const LogManager = () => {
         { id: 'monthly', label: 'Monthly', icon: SparkleIcon },
     ];
 
+    const logs = useMemo(() => data?.logs || [], [data?.logs]);
+
     return (
         <div className="space-y-5">
             {/* Header */}
@@ -126,16 +143,36 @@ const LogManager = () => {
             {/* Daily Tab Content */}
             {activeTab === 'daily' && (
                 <>
-                    {/* Search */}
-                    <div className="relative max-w-sm">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted w-3.5 h-3.5" />
-                        <input
-                            type="text"
-                            placeholder="Search logs..."
-                            className="w-full pl-8 pr-3 py-2 bg-card border border-border rounded-lg focus:ring-1 focus:ring-accent/30 focus:border-accent outline-none text-sm text-text placeholder:text-muted/50 transition-colors"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                    {/* Search and view controls */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div className="relative w-full md:max-w-md">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted w-3.5 h-3.5" />
+                            <input
+                                type="text"
+                                placeholder="Search logs..."
+                                className="w-full pl-8 pr-3 py-2 bg-card border border-border rounded-lg focus:ring-1 focus:ring-accent/30 focus:border-accent outline-none text-sm text-text placeholder:text-muted/50 transition-colors"
+                                value={search}
+                                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                            />
+                        </div>
+                        <div className="flex p-0.5 bg-card border border-border rounded-lg w-fit">
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('grid')}
+                                className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-surface text-text' : 'text-muted hover:text-text'}`}
+                                title="Grid view"
+                            >
+                                <LayoutGrid className="w-4 h-4" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('list')}
+                                className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-surface text-text' : 'text-muted hover:text-text'}`}
+                                title="List view"
+                            >
+                                <List className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Pending Logs Strip */}
@@ -176,7 +213,7 @@ const LogManager = () => {
                                 <div key={i} className="skeleton-card p-4 h-16 rounded-lg" />
                             ))}
                         </div>
-                    ) : data?.logs?.length === 0 ? (
+                    ) : logs.length === 0 ? (
                         <div className="bg-card border border-border border-dashed rounded-lg p-12 text-center">
                             <FileText className="w-8 h-8 text-muted/40 mx-auto mb-3" />
                             <p className="text-sm font-medium text-text mb-1">No logs yet</p>
@@ -191,24 +228,81 @@ const LogManager = () => {
                         </div>
                     ) : (
                         <>
-                            {/* Dense List View */}
-                            <div className="bg-card border border-border rounded-lg divide-y divide-border/30">
-                                {data?.logs?.map((log) => (
+                            {viewMode === 'grid' ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                                    {logs.map((log) => (
+                                        <div
+                                            key={log._id}
+                                            onClick={() => handleView(log)}
+                                            className="bg-card border border-border rounded-lg p-4 min-h-[180px] hover:border-zinc-600 hover:bg-surface/20 transition-colors cursor-pointer group flex flex-col"
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <span className="text-[11px] font-mono text-accent">{formatDate(log.date)}</span>
+                                                    <h3 className="text-sm font-semibold text-text mt-1 line-clamp-2">{getLogTitle(log)}</h3>
+                                                </div>
+                                                <span className={`badge ${getStatusBadge(log.status)} shrink-0`}>{log.status}</span>
+                                            </div>
+
+                                            <p className="text-xs text-muted mt-3 line-clamp-3 leading-relaxed">
+                                                {getLogSummary(log)}
+                                            </p>
+
+                                            <div className="mt-auto pt-4 space-y-3">
+                                                {log.status === 'Available' && (
+                                                    <div className="flex flex-wrap gap-1.5 min-h-6">
+                                                        {log.project && <span className="pill-chip text-[11px] py-0.5">{log.project}</span>}
+                                                        {log.jiraTicket && <span className="pill-chip text-[11px] py-0.5 font-mono">{log.jiraTicket}</span>}
+                                                        {log.systemsModules?.slice(0, 1).map(system => (
+                                                            <span key={system} className="pill-chip text-[11px] py-0.5">{system}</span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center justify-between border-t border-border/30 pt-3">
+                                                    <div className="flex items-center gap-3 text-[11px] text-muted">
+                                                        {log.workDone?.length > 0 && <span>{log.workDone.length} work items</span>}
+                                                        {log.learnings?.length > 0 && (
+                                                            <span className="flex items-center gap-1">
+                                                                <Lightbulb className="w-3 h-3 text-warning" />
+                                                                {log.learnings.length}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleEdit(log); }}
+                                                            className="p-1.5 text-muted hover:text-accent hover:bg-surface rounded-md transition-colors"
+                                                            title="Edit log"
+                                                        >
+                                                            <Edit className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleDelete(log._id); }}
+                                                            className="p-1.5 text-muted hover:text-error hover:bg-surface rounded-md transition-colors"
+                                                            title="Delete log"
+                                                        >
+                                                            <Trash className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                            <div className="bg-card border border-border rounded-lg divide-y divide-border/30 overflow-hidden">
+                                {logs.map((log) => (
                                     <div
                                         key={log._id}
                                         onClick={() => handleView(log)}
-                                        className="px-4 py-3 flex items-start gap-3 hover:bg-surface/30 transition-colors cursor-pointer group"
+                                        className="px-4 py-3 grid grid-cols-[88px_minmax(0,1fr)_auto] items-start gap-4 hover:bg-surface/30 transition-colors cursor-pointer group"
                                     >
                                         {/* Date column */}
-                                        <div className="shrink-0 w-20">
+                                        <div className="shrink-0">
                                             <span className="text-sm font-mono font-medium text-accent">
                                                 {formatDate(log.date)}
                                             </span>
-                                            <span className={`block mt-0.5 text-[11px] px-1.5 py-0.5 rounded font-medium w-fit ${
-                                                log.status === 'Available' ? 'badge-success' : 
-                                                log.status === 'No Work' ? 'badge-warning' :
-                                                'badge-error'
-                                            }`}>
+                                            <span className={`badge ${getStatusBadge(log.status)} block mt-1 w-fit`}>
                                                 {log.status}
                                             </span>
                                         </div>
@@ -230,6 +324,9 @@ const LogManager = () => {
                                                         )}
                                                     </div>
                                                     <p className="text-sm text-text line-clamp-1">{log.task}</p>
+                                                    {log.workDone?.[0] && (
+                                                        <p className="text-xs text-muted line-clamp-1 mt-0.5">{log.workDone[0]}</p>
+                                                    )}
                                                     <div className="flex items-center gap-3 mt-1 text-[11px] text-muted">
                                                         {log.workDone && log.workDone.length > 0 && (
                                                             <span>{log.workDone.length} item{log.workDone.length > 1 ? 's' : ''}</span>
@@ -265,12 +362,14 @@ const LogManager = () => {
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); handleEdit(log); }} 
                                                 className="p-1.5 text-muted hover:text-accent hover:bg-surface rounded-md transition-colors"
+                                                title="Edit log"
                                             >
                                                 <Edit className="w-3.5 h-3.5" />
                                             </button>
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); handleDelete(log._id); }} 
                                                 className="p-1.5 text-muted hover:text-error hover:bg-surface rounded-md transition-colors"
+                                                title="Delete log"
                                             >
                                                 <Trash className="w-3.5 h-3.5" />
                                             </button>
@@ -278,6 +377,7 @@ const LogManager = () => {
                                     </div>
                                 ))}
                             </div>
+                            )}
 
                             {/* Pagination */}
                             <div className="flex justify-center items-center gap-3 pt-2">

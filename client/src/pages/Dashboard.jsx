@@ -68,7 +68,7 @@ const Dashboard = () => {
             <div className="space-y-6">
                 <div className="skeleton h-7 w-56 rounded" />
                 <div className="skeleton h-4 w-40 rounded mt-1" />
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                     {[...Array(4)].map((_, i) => (
                         <div key={i} className="skeleton-card p-4 h-20 rounded-lg" />
                     ))}
@@ -143,7 +143,7 @@ const Dashboard = () => {
             )}
 
             {/* Metric Tiles */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                 <MetricTile 
                     label="Total Logs" 
                     value={stats?.totalLogs || 0} 
@@ -175,6 +175,14 @@ const Dashboard = () => {
                     icon={Briefcase} 
                     accent="warning"
                     delay={0.08}
+                />
+                <MetricTile
+                    label="AI Engine Calls"
+                    value={stats?.aiCalls || 0}
+                    sub="successful completions"
+                    icon={Brain}
+                    accent="success"
+                    delay={0.1}
                 />
             </div>
 

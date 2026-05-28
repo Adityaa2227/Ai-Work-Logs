@@ -80,7 +80,12 @@ exports.aiSearchLogs = async (req, res) => {
             .replace('{{LAST_WEEK_END}}', lastWeekEnd.toISOString());
 
         // Get AI filters
-        const aiResponse = await aiService.generateCustomReport(prompt);
+        const aiResult = await aiService.generateCustomReport(prompt, {
+            companyId: company,
+            taskType: 'simple',
+            preferredProvider: 'groq'
+        });
+        const aiResponse = aiResult.content;
         const filters = parseAIJSON(aiResponse);
 
         if (!filters) {
@@ -105,11 +110,29 @@ exports.aiSearchLogs = async (req, res) => {
             results,
             queryApplied: filters,
             interpretation: `Interpreted query: "${query}"`,
-            filtersUsed: filters
+            filtersUsed: filters,
+            status: aiResult.status,
+            provider: aiResult.provider,
+            message: aiResult.message,
+            quotaSafeguard: aiResult.quotaSafeguard
         });
 
     } catch (error) {
         console.error('AI search error:', error);
+        const quotaResponse = aiService.toQuotaResponse(error);
+        if (quotaResponse) {
+            const fallbackQuery = { company, $text: { $search: req.body.query || '' } };
+            const results = req.body.query
+                ? await WorkLog.find(fallbackQuery).sort({ date: -1 })
+                : [];
+            return res.status(quotaResponse.statusCode).json({
+                results,
+                queryApplied: fallbackQuery,
+                interpretation: quotaResponse.payload.message,
+                filtersUsed: {},
+                ...quotaResponse.payload
+            });
+        }
         res.status(500).json({ message: error.message });
     }
 };

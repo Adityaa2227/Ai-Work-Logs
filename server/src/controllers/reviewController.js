@@ -5,6 +5,13 @@ const aiService = require('../services/aiService');
 const prompts = require('../utils/prompts');
 const mongoose = require('mongoose');
 
+const sendQuotaResponse = (res, error) => {
+    const quotaResponse = aiService.toQuotaResponse(error);
+    if (!quotaResponse) return false;
+    res.status(quotaResponse.statusCode).json(quotaResponse.payload);
+    return true;
+};
+
 // Helper to extract basic metadata from logs and PRs
 const extractMetadata = async (logs, company, from, to) => {
     const systemsCovered = [...new Set(logs.flatMap(l => l.systemsModules || []).filter(Boolean))];
@@ -92,7 +99,12 @@ exports.generatePPOReview = async (req, res) => {
 
         const prompt = prompts.PPO_REVIEW_PROMPT.replace('{{DATA}}', JSON.stringify(dataDetails, null, 2));
 
-        const content = await aiService.generateCustomReport(prompt);
+        const aiResult = await aiService.generateCustomReport(prompt, {
+            companyId: company,
+            taskType: 'complex',
+            preferredProvider: 'gemini'
+        });
+        const content = aiResult.content;
         const metadata = await extractMetadata(logs, company, from, to);
 
         // Save report as a Summary
@@ -107,9 +119,16 @@ exports.generatePPOReview = async (req, res) => {
         });
 
         const savedSummary = await newSummary.save();
-        res.status(201).json(savedSummary);
+        res.status(201).json({
+            ...savedSummary.toObject(),
+            status: aiResult.status,
+            provider: aiResult.provider,
+            message: aiResult.message,
+            quotaSafeguard: aiResult.quotaSafeguard
+        });
     } catch (error) {
         console.error('Error generating PPO review:', error);
+        if (sendQuotaResponse(res, error)) return;
         res.status(500).json({ message: error.message });
     }
 };
@@ -147,7 +166,12 @@ exports.generateLearningReport = async (req, res) => {
 
         const prompt = prompts.LEARNING_REPORT_PROMPT.replace('{{LOGS}}', JSON.stringify(logDetails, null, 2));
 
-        const content = await aiService.generateCustomReport(prompt);
+        const aiResult = await aiService.generateCustomReport(prompt, {
+            companyId: company,
+            taskType: 'complex',
+            preferredProvider: 'gemini'
+        });
+        const content = aiResult.content;
         const metadata = await extractMetadata(logs, company, from, to);
 
         const newSummary = new Summary({
@@ -161,9 +185,16 @@ exports.generateLearningReport = async (req, res) => {
         });
 
         const savedSummary = await newSummary.save();
-        res.status(201).json(savedSummary);
+        res.status(201).json({
+            ...savedSummary.toObject(),
+            status: aiResult.status,
+            provider: aiResult.provider,
+            message: aiResult.message,
+            quotaSafeguard: aiResult.quotaSafeguard
+        });
     } catch (error) {
         console.error('Error generating learning report:', error);
+        if (sendQuotaResponse(res, error)) return;
         res.status(500).json({ message: error.message });
     }
 };
@@ -191,7 +222,12 @@ exports.generateContributionReport = async (req, res) => {
 
         const prompt = prompts.CONTRIBUTION_REPORT_PROMPT.replace('{{LOGS}}', JSON.stringify(logs, null, 2));
 
-        const content = await aiService.generateCustomReport(prompt);
+        const aiResult = await aiService.generateCustomReport(prompt, {
+            companyId: company,
+            taskType: 'complex',
+            preferredProvider: 'gemini'
+        });
+        const content = aiResult.content;
         const metadata = await extractMetadata(logs, company, from, to);
 
         const newSummary = new Summary({
@@ -205,9 +241,16 @@ exports.generateContributionReport = async (req, res) => {
         });
 
         const savedSummary = await newSummary.save();
-        res.status(201).json(savedSummary);
+        res.status(201).json({
+            ...savedSummary.toObject(),
+            status: aiResult.status,
+            provider: aiResult.provider,
+            message: aiResult.message,
+            quotaSafeguard: aiResult.quotaSafeguard
+        });
     } catch (error) {
         console.error('Error generating contribution report:', error);
+        if (sendQuotaResponse(res, error)) return;
         res.status(500).json({ message: error.message });
     }
 };
@@ -270,7 +313,12 @@ exports.generateSprintSummary = async (req, res) => {
 
         const prompt = prompts.SPRINT_SUMMARY_PROMPT.replace('{{LOGS}}', JSON.stringify(sprintDetails, null, 2));
 
-        const content = await aiService.generateCustomReport(prompt);
+        const aiResult = await aiService.generateCustomReport(prompt, {
+            companyId: company,
+            taskType: 'complex',
+            preferredProvider: 'gemini'
+        });
+        const content = aiResult.content;
         const metadata = await extractMetadata(logs, company, from || new Date(), to || new Date());
 
         const newSummary = new Summary({
@@ -284,9 +332,16 @@ exports.generateSprintSummary = async (req, res) => {
         });
 
         const savedSummary = await newSummary.save();
-        res.status(201).json(savedSummary);
+        res.status(201).json({
+            ...savedSummary.toObject(),
+            status: aiResult.status,
+            provider: aiResult.provider,
+            message: aiResult.message,
+            quotaSafeguard: aiResult.quotaSafeguard
+        });
     } catch (error) {
         console.error('Error generating sprint summary:', error);
+        if (sendQuotaResponse(res, error)) return;
         res.status(500).json({ message: error.message });
     }
 };

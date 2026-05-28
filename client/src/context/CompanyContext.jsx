@@ -20,7 +20,8 @@ export const CompanyProvider = ({ children }) => {
     useEffect(() => {
         if (companies && companies.length > 0) {
             const saved = localStorage.getItem('selectedCompany');
-            const found = companies.find(c => c._id === saved) || companies.find(c => c.name.toLowerCase() === 'paypal');
+            const paypalCompany = companies.find(c => c.name.toLowerCase() === 'paypal');
+            const found = paypalCompany || companies.find(c => c._id === saved);
             
             if (found) {
                 setSelectedCompany(found);

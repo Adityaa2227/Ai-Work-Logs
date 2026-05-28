@@ -60,7 +60,7 @@ exports.autoGenerateWeeklySummary = async (company, date) => {
         }
         
         // Generate AI summary
-        const aiResult = await generateSummary({ from: monday, to: sunday, type: 'weekly' }, logs);
+        const aiResult = await generateSummary({ from: monday, to: sunday, type: 'weekly' }, logs, company);
         
         // Extract metadata
         const systemsCovered = [...new Set(logs.flatMap(l => l.systemsModules || []).filter(Boolean))];
@@ -143,7 +143,7 @@ exports.autoGenerateMonthlySummary = async (company, date) => {
         }
         
         // Generate AI summary
-        const aiResult = await generateSummary({ from: startDate, to: endDate, type: 'monthly' }, logs);
+        const aiResult = await generateSummary({ from: startDate, to: endDate, type: 'monthly' }, logs, company);
         
         // Extract metadata
         const systemsCovered = [...new Set(logs.flatMap(l => l.systemsModules || []).filter(Boolean))];

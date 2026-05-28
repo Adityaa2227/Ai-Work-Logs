@@ -26,12 +26,20 @@ const AIFeedback = () => {
     // 2. Mutation to generate feedback
     const generateMutation = useMutation({
         mutationFn: () => generateFeedback(selectedCompany?._id),
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries(['latestFeedback']);
+            if (data?.quotaSafeguard) {
+                toast.info(data.message || 'AI quota safeguard activated. Your critique was safely queued.');
+                return;
+            }
             toast.success('Staff Engineer critique updated!');
         },
         onError: (err) => {
             console.error(err);
+            if (err.response?.data?.quotaSafeguard) {
+                toast.info(err.response.data.message || 'AI quota safeguard activated. Your critique was safely queued.');
+                return;
+            }
             toast.error(err.response?.data?.message || 'Failed to generate critique.');
         }
     });
@@ -39,8 +47,8 @@ const AIFeedback = () => {
     const handleGenerate = () => {
         toast.promise(generateMutation.mutateAsync(), {
             loading: 'Staff Engineer reviewing your logs from the last 7 days...',
-            success: 'Analysis completed successfully!',
-            error: 'Failed to complete review.'
+            success: (data) => data?.quotaSafeguard ? (data.message || 'AI quota safeguard activated. Your critique was safely queued.') : 'Analysis completed successfully!',
+            error: (err) => err.response?.data?.quotaSafeguard ? (err.response.data.message || 'AI quota safeguard activated. Your critique was safely queued.') : 'Failed to complete review.'
         });
     };
 

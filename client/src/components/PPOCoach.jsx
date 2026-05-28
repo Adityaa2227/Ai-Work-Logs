@@ -38,6 +38,11 @@ const PPOCoach = () => {
             queryClient.invalidateQueries(['ppo-history', selectedCompany?._id]);
         },
         onError: (err, newMsg, context) => {
+            if (err.response?.data?.quotaSafeguard) {
+                toast.info(err.response.data.message || 'Coach response was safely queued.');
+                queryClient.invalidateQueries(['ppo-history', selectedCompany?._id]);
+                return;
+            }
             toast.error(err.response?.data?.message || 'Failed to communicate with coach');
             queryClient.setQueryData(['ppo-history', selectedCompany?._id], context.previous);
         }

@@ -290,16 +290,24 @@ exports.getPendingLogs = async (req, res) => {
 // @access  Public
 exports.structureNotes = async (req, res) => {
     try {
-        const { rawNotes } = req.body;
+        const { rawNotes, company } = req.body;
         if (!rawNotes) {
             return res.status(400).json({ message: 'Raw notes are required for AI structuring.' });
+        }
+        if (!company) {
+            return res.status(400).json({ message: 'Company ID is required' });
         }
 
         const aiService = require('../services/aiService');
         const prompts = require('../utils/prompts');
 
         const prompt = prompts.RAW_NOTES_STRUCTURING_PROMPT.replace('{{RAW_NOTES}}', rawNotes);
-        const aiResponse = await aiService.generateCustomReport(prompt);
+        const aiResult = await aiService.generateCustomReport(prompt, {
+            companyId: company,
+            taskType: 'simple',
+            preferredProvider: 'groq'
+        });
+        const aiResponse = aiResult.content;
         
         let structuredData = null;
         try {
@@ -316,8 +324,21 @@ exports.structureNotes = async (req, res) => {
             });
         }
 
-        res.json(structuredData);
+        res.json({
+            ...structuredData,
+            _ai: {
+                status: aiResult.status,
+                provider: aiResult.provider,
+                message: aiResult.message,
+                quotaSafeguard: aiResult.quotaSafeguard
+            }
+        });
     } catch (error) {
+        const aiService = require('../services/aiService');
+        const quotaResponse = aiService.toQuotaResponse(error);
+        if (quotaResponse) {
+            return res.status(quotaResponse.statusCode).json(quotaResponse.payload);
+        }
         console.error('Error structuring notes:', error);
         res.status(500).json({ message: error.message });
     }
