@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useCompany } from '../context/CompanyContext';
 import LogForm from './LogForm';
 import ReadOnlyLogView from './ReadOnlyLogView';
@@ -18,51 +18,61 @@ const GlobalLogModal = () => {
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[100] flex justify-end">
+                {/* Backdrop */}
                 <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                    className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                     onClick={closeGlobalForm}
                 />
 
+                {/* Slide-over Panel */}
                 <motion.div 
-                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    className="bg-card rounded-3xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative z-10 scrollbar-hide border border-orange-500/20"
+                    initial={{ x: '100%' }}
+                    animate={{ x: 0 }}
+                    exit={{ x: '100%' }}
+                    transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
+                    className="relative z-10 w-full max-w-2xl bg-card border-l border-border/50 shadow-2xl flex flex-col h-full"
                 >
-                    <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
+                    {/* Header */}
+                    <div className="flex justify-between items-center px-5 py-3.5 border-b border-border/50 shrink-0">
                         <div>
-                            <h2 className="text-2xl font-bold font-mono tracking-tight text-white">
+                            <h2 className="text-base font-semibold text-text">
                                 {isViewing ? 'Entry Details' : isEditing ? 'Edit Entry' : 'New Log Entry'}
                             </h2>
-                            <p className="text-orange-400 text-sm mt-1 font-medium">
-                                {isViewing ? 'Review your work log details.' : 'Capture your progress and learnings.'}
+                            <p className="text-xs text-muted mt-0.5">
+                                {isViewing ? 'Review your work log details' : 'Capture your engineering progress'}
                             </p>
                         </div>
-                        <button onClick={closeGlobalForm} className="p-2 bg-surface rounded-full hover:bg-border transition-colors group border border-border">
-                            <svg className="w-5 h-5 text-muted group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                        <button 
+                            onClick={closeGlobalForm} 
+                            className="p-1.5 rounded-md hover:bg-surface text-muted hover:text-text transition-colors"
+                        >
+                            <X className="w-4 h-4" />
                         </button>
                     </div>
 
-                    {isViewing ? (
-                        <ReadOnlyLogView log={globalFormPreset.viewingLog} />
-                    ) : (
-                        <LogForm 
-                            log={isEditing ? globalFormPreset.editingLog : null} 
-                            presetDate={isNew ? globalFormPreset?.date : null}
-                            onSuccess={() => { 
-                                closeGlobalForm(); 
-                                queryClient.invalidateQueries({ queryKey: ['logs'] }); 
-                                queryClient.invalidateQueries({ queryKey: ['dashboardStats'] }); 
-                                queryClient.invalidateQueries({ queryKey: ['analyticsCharts'] });
-                            }} 
-                        />
-                    )}
+                    {/* Content */}
+                    <div className="flex-1 flex flex-col min-h-0 px-5 py-4 overflow-hidden">
+                        {isViewing ? (
+                            <div className="flex-1 overflow-y-auto scrollbar-hide">
+                                <ReadOnlyLogView log={globalFormPreset.viewingLog} />
+                            </div>
+                        ) : (
+                            <LogForm 
+                                log={isEditing ? globalFormPreset.editingLog : null} 
+                                presetDate={isNew ? globalFormPreset?.date : null}
+                                onSuccess={() => { 
+                                    closeGlobalForm(); 
+                                    queryClient.invalidateQueries({ queryKey: ['logs'] }); 
+                                    queryClient.invalidateQueries({ queryKey: ['dashboardStats'] }); 
+                                    queryClient.invalidateQueries({ queryKey: ['analyticsCharts'] });
+                                }} 
+                            />
+                        )}
+                    </div>
                 </motion.div>
             </div>
         </AnimatePresence>

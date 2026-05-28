@@ -89,43 +89,38 @@ const ManagerReview = () => {
         }
     };
 
-    const inputClasses = "w-full p-2.5 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none text-text text-xs hover:border-border/80";
+    const inputClasses = "w-full px-3 py-2 bg-surface border border-border rounded-lg focus:ring-1 focus:ring-accent/30 focus:border-accent outline-none text-text text-sm transition-colors";
 
     return (
-        <div className="space-y-8 max-w-7xl mx-auto pb-10">
+        <div className="space-y-5 max-w-7xl mx-auto pb-10">
             {/* Header */}
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                    <Link to="/" className="text-muted hover:text-text transition-colors p-1.5 bg-card border border-border/80 rounded-lg">
-                        <ArrowLeft className="w-4 h-4" />
+            <header className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <Link to="/" className="text-muted hover:text-text transition-colors text-sm flex items-center gap-1">
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>Back</span>
                     </Link>
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-text tracking-tight flex items-center gap-2.5">
-                            <Sparkles className="w-7 h-7 text-teal-400" />
-                            <span>Manager Review & PPO Mode</span>
-                        </h1>
-                        <p className="text-muted text-xs font-semibold mt-1 uppercase tracking-wider flex items-center gap-1.5">
-                            <Terminal className="w-3.5 h-3.5 text-accent" />
-                            <span>Synthesize internship contributions into industry-standard promotion review portfolios</span>
-                        </p>
+                    <span className="text-border">/</span>
+                    <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-accent" />
+                        <h1 className="text-xl font-semibold text-text">Manager Review & Reports</h1>
                     </div>
                 </div>
             </header>
 
-            {/* Layout Split: Left config / Right preview */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Layout: Left config / Right preview */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                 
-                {/* Left side: Configuration panel */}
-                <div className="space-y-6">
-                    <div className="bg-card border border-border/60 rounded-2xl p-5 space-y-4 shadow-lg">
-                        <h3 className="text-xs font-extrabold uppercase tracking-widest text-accent flex items-center gap-1.5">
-                            <Terminal className="w-3.5 h-3.5 text-accent" />
-                            <span>Generate Contribution Dossier</span>
+                {/* Left: Configuration Panel */}
+                <div className="space-y-4">
+                    <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+                        <h3 className="text-xs font-medium uppercase tracking-wider text-muted">
+                            Generate Report
                         </h3>
 
-                        {/* Report type select */}
+                        {/* Report type */}
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Review Dossier Category</label>
+                            <label className="text-xs font-medium uppercase tracking-wider text-muted">Report Type</label>
                             <select
                                 className={inputClasses}
                                 value={reportType}
@@ -138,10 +133,10 @@ const ManagerReview = () => {
                             </select>
                         </div>
 
-                        {/* Sprint input (Only for sprint summary) */}
+                        {/* Sprint input */}
                         {reportType === 'sprint' && (
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Sprint Identifier</label>
+                                <label className="text-xs font-medium uppercase tracking-wider text-muted">Sprint Identifier</label>
                                 <input
                                     type="text"
                                     placeholder="e.g. Sprint 3"
@@ -155,7 +150,7 @@ const ManagerReview = () => {
                         {/* Date range */}
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">From Date</label>
+                                <label className="text-xs font-medium uppercase tracking-wider text-muted">From</label>
                                 <input
                                     type="date"
                                     className={inputClasses}
@@ -164,7 +159,7 @@ const ManagerReview = () => {
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">To Date</label>
+                                <label className="text-xs font-medium uppercase tracking-wider text-muted">To</label>
                                 <input
                                     type="date"
                                     className={inputClasses}
@@ -177,58 +172,65 @@ const ManagerReview = () => {
                         <button
                             onClick={() => generateMutation.mutate()}
                             disabled={generateMutation.isPending || (reportType === 'sprint' && !sprint)}
-                            className="w-full bg-accent hover:bg-accentHover text-white py-3 rounded-xl font-bold text-xs uppercase tracking-wide shadow-md shadow-accent/15 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-150"
+                            className="w-full bg-accent hover:bg-accentHover text-white text-sm font-medium py-2 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 transition-colors"
                         >
                             {generateMutation.isPending ? (
                                 <>
-                                    <RefreshCw className="w-4 h-4 animate-spin" />
-                                    <span>AI Engineering Synthesis...</span>
+                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    <span>Generating...</span>
                                 </>
                             ) : (
                                 <>
-                                    <Sparkles className="w-4 h-4 text-teal-400 animate-pulse" />
-                                    <span>Synthesize Dossier</span>
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    <span>Generate Report</span>
                                 </>
                             )}
                         </button>
                     </div>
 
-                    {/* Saved reviews stream */}
-                    <div className="space-y-3">
-                        <h4 className="text-xs font-extrabold uppercase tracking-widest text-muted">
-                            Saved Review Portfolios
+                    {/* Saved Reports List */}
+                    <div className="space-y-2">
+                        <h4 className="text-xs font-medium uppercase tracking-wider text-muted">
+                            Saved Reports
                         </h4>
 
-                        <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1 scrollbar-thin">
+                        <div className="space-y-1.5 max-h-[40vh] overflow-y-auto scrollbar-hide">
                             {reportsLoading ? (
-                                <div className="skeleton-card p-4 h-16" />
+                                <div className="space-y-2">
+                                    {[...Array(3)].map((_, i) => (
+                                        <div key={i} className="skeleton bg-zinc-800 h-14 rounded-lg" />
+                                    ))}
+                                </div>
                             ) : savedReports?.length === 0 ? (
-                                <div className="bg-card/30 border border-border/40 p-4 rounded-xl text-center text-xs text-muted">
-                                    No compiled portfolios saved.
+                                <div className="bg-card border border-border rounded-lg p-4 text-center text-sm text-muted">
+                                    No saved reports yet.
                                 </div>
                             ) : (
                                 savedReports?.map(report => (
                                     <button
                                         key={report._id}
                                         onClick={() => setActiveReport(report)}
-                                        className={`w-full text-left p-3.5 border rounded-xl transition-all flex items-center justify-between gap-3 bg-card ${
+                                        className={`w-full text-left px-3 py-2.5 border rounded-lg transition-colors flex items-center justify-between gap-2 bg-card ${
                                             activeReport?._id === report._id 
-                                                ? 'border-accent shadow-md shadow-accent/5' 
-                                                : 'border-border/60 hover:border-border hover:bg-surface/50'
+                                                ? 'border-accent/60 bg-accent/5' 
+                                                : 'border-border hover:border-zinc-600 hover:bg-surface/40'
                                         }`}
                                     >
-                                        <div className="space-y-1">
-                                            <span className="text-[10px] font-mono font-bold text-accent block uppercase tracking-wider">
-                                                {new Date(report.createdAt).toLocaleDateString()}
-                                            </span>
-                                            <span className="text-xs font-bold text-text leading-tight block">
+                                        <div className="min-w-0">
+                                            <span className="text-xs font-medium text-text block truncate">
                                                 {getTypeDisplay(report.type)}
                                             </span>
-                                            <span className="text-[10px] text-muted block font-medium">
-                                                {new Date(report.startDate).toLocaleDateString()} - {new Date(report.endDate).toLocaleDateString()}
-                                            </span>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <span className="text-[11px] font-mono text-muted">
+                                                    {new Date(report.createdAt).toLocaleDateString()}
+                                                </span>
+                                                <span className="text-border">·</span>
+                                                <span className="text-[11px] text-muted">
+                                                    {new Date(report.startDate).toLocaleDateString()} – {new Date(report.endDate).toLocaleDateString()}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <ChevronRight className="w-4 h-4 text-muted" />
+                                        <ChevronRight className="w-3.5 h-3.5 text-muted shrink-0" />
                                     </button>
                                 ))
                             )}
@@ -236,24 +238,24 @@ const ManagerReview = () => {
                     </div>
                 </div>
 
-                {/* Right side: Report preview area */}
-                <div className="xl:col-span-2 space-y-4">
+                {/* Right: Report Preview */}
+                <div className="xl:col-span-2">
                     <AnimatePresence mode="wait">
                         {activeReport ? (
                             <motion.div
                                 key={activeReport._id}
-                                initial={{ opacity: 0, y: 10 }}
+                                initial={{ opacity: 0, y: 6 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="bg-card border border-border/60 rounded-2xl overflow-hidden shadow-xl"
+                                exit={{ opacity: 0, y: -6 }}
+                                className="bg-card border border-border rounded-lg overflow-hidden"
                             >
-                                {/* Report Control Bar */}
-                                <div className="bg-surface/60 border-b border-border/80 p-4 flex flex-wrap items-center justify-between gap-4">
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-bold text-accent uppercase tracking-wider block">
-                                            Previewing Portfolio
+                                {/* Report Header Bar */}
+                                <div className="border-b border-border px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <span className="text-xs font-medium uppercase tracking-wider text-muted">
+                                            Report Preview
                                         </span>
-                                        <h3 className="text-sm font-extrabold text-text leading-tight">
+                                        <h3 className="text-sm font-semibold text-text mt-0.5">
                                             {getTypeDisplay(activeReport.type)}
                                         </h3>
                                     </div>
@@ -261,25 +263,25 @@ const ManagerReview = () => {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={handleCopy}
-                                            className="p-2 bg-card hover:bg-surface border border-border/80 text-muted hover:text-text rounded-xl font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                                            title="Copy markdown to clipboard"
+                                            className="bg-surface hover:bg-zinc-700 text-text text-sm font-medium px-3 py-1.5 rounded-lg border border-border flex items-center gap-1.5 transition-colors cursor-pointer"
+                                            title="Copy markdown"
                                         >
-                                            <Copy className="w-4 h-4" />
-                                            <span>Copy Markdown</span>
+                                            <Copy className="w-3.5 h-3.5" />
+                                            <span>Copy</span>
                                         </button>
                                         <button
                                             onClick={handleDownloadPDF}
-                                            className="p-2 bg-accent hover:bg-accentHover text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-lg shadow-accent/15"
-                                            title="Download PDF document"
+                                            className="bg-accent hover:bg-accentHover text-white text-sm font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                                            title="Download PDF"
                                         >
-                                            <Download className="w-4 h-4" />
-                                            <span>Download PDF</span>
+                                            <Download className="w-3.5 h-3.5" />
+                                            <span>PDF</span>
                                         </button>
                                     </div>
                                 </div>
 
                                 {/* Report Content */}
-                                <div className="p-6 md:p-8 prose prose-invert prose-slate max-w-none text-text text-sm leading-relaxed max-h-[66vh] overflow-y-auto scrollbar-thin">
+                                <div className="p-6 prose-engineering max-w-none text-sm leading-relaxed max-h-[66vh] overflow-y-auto scrollbar-hide">
                                     <ReactMarkdown>{activeReport.content}</ReactMarkdown>
                                 </div>
                             </motion.div>
@@ -287,14 +289,14 @@ const ManagerReview = () => {
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="bg-card/20 border border-border border-dashed p-20 rounded-2xl text-center space-y-4 min-h-[50vh] flex flex-col items-center justify-center"
+                                className="bg-card border border-border border-dashed rounded-lg p-12 text-center space-y-3 min-h-[50vh] flex flex-col items-center justify-center"
                             >
-                                <div className="w-16 h-16 bg-accent/10 flex items-center justify-center rounded-2xl text-accent">
-                                    <Sparkles className="w-8 h-8 text-teal-400 animate-pulse" />
+                                <div className="w-10 h-10 bg-surface flex items-center justify-center rounded-lg text-muted">
+                                    <FileText className="w-5 h-5" />
                                 </div>
-                                <h3 className="text-base font-bold text-text">Review portfolio preview vacant</h3>
-                                <p className="text-muted text-xs max-w-sm mx-auto leading-relaxed">
-                                    Use the left configuration panel to select dates and synthesize a professional internship review portfolio, or select a saved portfolio from below!
+                                <p className="text-sm font-medium text-text">No report selected</p>
+                                <p className="text-xs text-muted max-w-xs mx-auto">
+                                    Configure and generate a report using the panel on the left, or select a previously saved report.
                                 </p>
                             </motion.div>
                         )}

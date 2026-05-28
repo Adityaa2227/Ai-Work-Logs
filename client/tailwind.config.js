@@ -7,29 +7,46 @@ export default {
     theme: {
       extend: {
         colors: {
-            bg: '#070a13',       // Dark premium obsidian space navy
-            card: '#0f172a',     // Slate 900
-            surface: '#1e293b',  // Slate 800
-            border: 'rgba(255, 255, 255, 0.06)', // Elegant glass borders
-            
-            text: '#f8fafc',     // Slate 50
-            muted: '#94a3b8',    // Slate 400
-            
-            accent: '#6366f1',   // Indigo 500 (premium and modern)
-            accentHover: '#4f46e5', // Indigo 600
-            
-            success: '#10b981', // Emerald 500
-            warning: '#f59e0b', // Amber 500
-            error: '#ef4444',   // Red 500
+            bg: '#09090b',
+            card: '#18181b',
+            surface: '#27272a',
+            border: 'rgba(63, 63, 70, 0.5)',
 
-            // Contextual Aliases
-            primary: '#6366f1', 
-            secondary: '#1e293b',
+            text: '#fafafa',
+            muted: '#a1a1aa',
+
+            accent: '#818cf8',
+            accentHover: '#6366f1',
+
+            success: '#34d399',
+            warning: '#fbbf24',
+            error: '#f87171',
+
+            primary: '#818cf8',
+            secondary: '#27272a',
         },
         fontFamily: {
-            mono: ['JetBrains Mono', 'Menlo', 'monospace'],
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-        }
+            mono: ['JetBrains Mono', 'Menlo', 'Consolas', 'monospace'],
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        },
+        fontSize: {
+            'xxs': ['0.625rem', { lineHeight: '0.875rem' }],
+        },
+        animation: {
+            'fade-in': 'fadeIn 0.3s ease-out',
+            'slide-in': 'slideIn 0.2s ease-out',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        },
+        keyframes: {
+            fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(4px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            slideIn: {
+                '0%': { opacity: '0', transform: 'translateX(8px)' },
+                '100%': { opacity: '1', transform: 'translateX(0)' },
+            },
+        },
       },
     },
     plugins: [],

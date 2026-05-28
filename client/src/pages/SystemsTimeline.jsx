@@ -20,12 +20,12 @@ const SystemsTimeline = () => {
 
     if (isLoading) {
         return (
-            <div className="space-y-8 max-w-5xl mx-auto">
-                <div className="skeleton h-8 w-48 rounded" />
-                <div className="skeleton h-4 w-64 rounded mt-2" />
-                <div className="space-y-6 pt-6">
+            <div className="space-y-6 max-w-5xl mx-auto">
+                <div className="skeleton h-6 w-48 rounded bg-zinc-800" />
+                <div className="skeleton h-4 w-64 rounded bg-zinc-800 mt-2" />
+                <div className="space-y-4 pt-4">
                     {[...Array(3)].map((_, i) => (
-                        <div key={i} className="skeleton-card h-40" />
+                        <div key={i} className="skeleton h-32 rounded-lg bg-zinc-800" />
                     ))}
                 </div>
             </div>
@@ -42,103 +42,97 @@ const SystemsTimeline = () => {
     };
 
     return (
-        <div className="space-y-8 max-w-5xl mx-auto pb-10">
+        <div className="space-y-6 max-w-5xl mx-auto pb-10">
             {/* Header */}
-            <header className="space-y-2">
-                <div className="flex items-center gap-2">
-                    <Link to="/" className="text-muted hover:text-text transition-colors p-1.5 bg-card border border-border/80 rounded-lg">
-                        <ArrowLeft className="w-4 h-4" />
+            <header className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <Link to="/" className="text-muted hover:text-text transition-colors text-sm flex items-center gap-1">
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>Back</span>
                     </Link>
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-text tracking-tight flex items-center gap-2.5">
-                            <Server className="w-7 h-7 text-accent" />
-                            <span>Systems Architecture Timeline</span>
-                        </h1>
-                        <p className="text-muted text-xs font-semibold mt-1 uppercase tracking-wider flex items-center gap-1.5">
-                            <Terminal className="w-3.5 h-3.5 text-accent" />
-                            <span>Mapping your microservice and backend infrastructure footprint</span>
-                        </p>
-                    </div>
+                    <span className="text-border">/</span>
+                    <h1 className="text-xl font-semibold text-text">Systems Timeline</h1>
                 </div>
+                <span className="text-xs text-muted font-mono">
+                    {timelineData?.length || 0} entries
+                </span>
             </header>
 
             {/* Timeline Stream */}
             {timelineData?.length === 0 ? (
-                <div className="bg-card border border-border border-dashed p-16 rounded-3xl text-center space-y-4">
-                    <div className="w-16 h-16 bg-accent/15 flex items-center justify-center rounded-2xl mx-auto">
-                        <Server className="w-8 h-8 text-accent" />
+                <div className="bg-card border border-border border-dashed p-10 rounded-lg text-center space-y-3">
+                    <div className="w-10 h-10 bg-accent/10 flex items-center justify-center rounded-lg mx-auto">
+                        <Server className="w-5 h-5 text-accent" />
                     </div>
-                    <h3 className="text-lg font-bold text-text">No systems modules registered yet</h3>
+                    <h3 className="text-sm font-semibold text-text">No systems modules registered</h3>
                     <p className="text-muted text-xs max-w-md mx-auto">
-                        Create daily logs and specify "Systems/Modules Touched" in the advanced fields to construct your architecture footprint!
+                        Create daily logs and specify "Systems/Modules Touched" in the advanced fields to build your architecture footprint.
                     </p>
                     <Link
                         to="/logs"
-                        className="bg-accent text-white px-5 py-2.5 rounded-xl font-bold inline-block text-xs uppercase tracking-wide hover:shadow-lg transition-all"
+                        className="bg-accent hover:bg-accentHover text-white px-3 py-1.5 rounded-lg font-medium inline-block text-sm transition-colors"
                     >
                         Log standup
                     </Link>
                 </div>
             ) : (
-                <div className="relative border-l-2 border-border/60 ml-3 pl-8 py-4 space-y-8">
+                <div className="relative border-l border-border ml-2 pl-6 py-2 space-y-4">
                     {timelineData?.map((log, idx) => (
                         <motion.div
                             key={log._id}
-                            initial={{ opacity: 0, x: -20 }}
+                            initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.3, delay: idx * 0.05 }}
+                            transition={{ duration: 0.2, delay: idx * 0.03 }}
                             className="relative"
                         >
-                            {/* Marker Icon on Timeline */}
-                            <div className="absolute -left-[45px] top-1.5 p-2 bg-slate-900 border-2 border-accent rounded-full text-accent shadow-md shadow-accent/15 z-10">
-                                <Cpu className="w-4 h-4" />
+                            {/* Marker */}
+                            <div className="absolute -left-[33px] top-2 p-1.5 bg-bg border border-border rounded-full text-accent z-10">
+                                <Cpu className="w-3 h-3" />
                             </div>
 
                             {/* Contribution Card */}
-                            <div className="bg-card border border-border/60 hover:border-accent/40 rounded-2xl p-5 space-y-4 shadow-lg hover:shadow-xl transition-all duration-200">
-                                <div className="flex flex-wrap items-center justify-between gap-4">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xs font-bold text-accent font-mono flex items-center gap-1">
-                                            <Calendar className="w-3.5 h-3.5" />
-                                            {formatDate(log.date)}
+                            <div className="bg-card border border-border rounded-lg p-4 space-y-3 hover:border-zinc-600 transition-colors">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-xs text-accent font-mono flex items-center gap-1">
+                                        <Calendar className="w-3 h-3" />
+                                        {formatDate(log.date)}
+                                    </span>
+                                    {log.sprint && (
+                                        <span className="text-[11px] px-1.5 py-0.5 bg-surface border border-border text-muted rounded font-medium">
+                                            {log.sprint}
                                         </span>
-                                        {log.sprint && (
-                                            <span className="text-[10px] px-2 py-0.5 bg-surface border border-border text-muted rounded font-bold uppercase tracking-wider">
-                                                {log.sprint}
-                                            </span>
-                                        )}
-                                        {log.jiraTicket && (
-                                            <span className="text-[10px] px-2 py-0.5 bg-accent/15 border border-accent/20 text-accent rounded font-mono">
-                                                {log.jiraTicket}
-                                            </span>
-                                        )}
-                                        {log.prNumber && (
-                                            <span className="text-[10px] px-2 py-0.5 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded font-mono flex items-center gap-1">
-                                                <GitPullRequest className="w-3 h-3" />
-                                                PR {log.prNumber}
-                                            </span>
-                                        )}
-                                        {log.complexity && (
-                                            <span className={`text-[10px] px-2 py-0.5 rounded border font-bold uppercase ${
-                                                log.complexity === 'high' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                                            }`}>
-                                                Complexity: {log.complexity}
-                                            </span>
-                                        )}
-                                    </div>
+                                    )}
+                                    {log.jiraTicket && (
+                                        <span className="text-[11px] px-1.5 py-0.5 bg-accent/10 border border-accent/20 text-accent rounded font-mono">
+                                            {log.jiraTicket}
+                                        </span>
+                                    )}
+                                    {log.prNumber && (
+                                        <span className="text-[11px] px-1.5 py-0.5 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded font-mono flex items-center gap-0.5">
+                                            <GitPullRequest className="w-3 h-3" />
+                                            PR {log.prNumber}
+                                        </span>
+                                    )}
+                                    {log.complexity && (
+                                        <span className={`text-[11px] px-1.5 py-0.5 rounded border font-medium ${
+                                            log.complexity === 'high' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                                        }`}>
+                                            {log.complexity}
+                                        </span>
+                                    )}
                                 </div>
 
-                                <div className="space-y-1.5">
-                                    <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">Standup Focus</span>
-                                    <h3 className="text-sm font-semibold text-text leading-snug">{log.task}</h3>
+                                <div>
+                                    <span className="text-xs font-medium uppercase tracking-wider text-muted block mb-0.5">Task</span>
+                                    <h3 className="text-sm font-medium text-text leading-snug">{log.task}</h3>
                                 </div>
 
-                                {/* Systems Touched Pills */}
-                                <div className="space-y-1.5 border-t border-border/30 pt-3.5">
-                                    <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">Systems Footprint</span>
+                                {/* Systems Touched */}
+                                <div className="border-t border-border pt-3">
+                                    <span className="text-xs font-medium uppercase tracking-wider text-muted block mb-1.5">Systems Footprint</span>
                                     <div className="flex flex-wrap gap-1.5">
                                         {log.systemsModules?.map((sys, i) => (
-                                            <span key={i} className="px-2.5 py-1 bg-accent/15 border border-accent/25 text-accent font-semibold text-xs rounded-lg">
+                                            <span key={i} className="px-2 py-0.5 bg-accent/10 border border-accent/20 text-accent text-[11px] font-medium rounded">
                                                 {sys}
                                             </span>
                                         ))}
@@ -146,13 +140,13 @@ const SystemsTimeline = () => {
                                 </div>
 
                                 {/* Tech & Databases */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-border/30 pt-3.5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-border pt-3">
                                     {log.technologiesUsed && log.technologiesUsed.length > 0 && (
-                                        <div className="space-y-1">
-                                            <span className="text-[9px] font-bold text-muted uppercase block">Technologies</span>
+                                        <div>
+                                            <span className="text-xs font-medium uppercase tracking-wider text-muted block mb-1">Technologies</span>
                                             <div className="flex flex-wrap gap-1">
                                                 {log.technologiesUsed.map((tech, i) => (
-                                                    <span key={i} className="text-text bg-surface px-1.5 py-0.5 rounded text-[10px] border border-border">
+                                                    <span key={i} className="text-text bg-surface px-1.5 py-0.5 rounded text-[11px] border border-border font-mono">
                                                         {tech}
                                                     </span>
                                                 ))}
@@ -160,9 +154,9 @@ const SystemsTimeline = () => {
                                         </div>
                                     )}
                                     {log.workDone && log.workDone.length > 0 && (
-                                        <div className="space-y-1">
-                                            <span className="text-[9px] font-bold text-muted uppercase block">Factual Achievements</span>
-                                            <ul className="list-disc list-outside ml-4 space-y-0.5 text-xs text-muted leading-relaxed">
+                                        <div>
+                                            <span className="text-xs font-medium uppercase tracking-wider text-muted block mb-1">Achievements</span>
+                                            <ul className="list-disc list-outside ml-4 space-y-0.5 text-xs text-muted">
                                                 {log.workDone.slice(0, 2).map((wd, i) => (
                                                     <li key={i} className="line-clamp-1">{wd}</li>
                                                 ))}

@@ -17,18 +17,18 @@ export const CompanyProvider = ({ children }) => {
         }
     });
 
-    // Load initial company from local storage or default to first
     useEffect(() => {
         if (companies && companies.length > 0) {
             const saved = localStorage.getItem('selectedCompany');
-            const found = companies.find(c => c._id === saved);
+            const found = companies.find(c => c._id === saved) || companies.find(c => c.name.toLowerCase() === 'paypal');
+            
             if (found) {
                 setSelectedCompany(found);
+                if (found._id !== saved) localStorage.setItem('selectedCompany', found._id);
             } else {
                 setSelectedCompany(companies[0]);
             }
         } else if (companies && companies.length === 0) {
-            // No companies? user needs to create one.
             setSelectedCompany(null);
         }
     }, [companies]);

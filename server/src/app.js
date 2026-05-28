@@ -23,7 +23,7 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/pr', require('./routes/pr'));
 app.use('/api/review', require('./routes/review'));
 app.use('/api/search', require('./routes/search'));
-
+app.use('/api/ppo', require('./routes/ppoRoutes'));
 const { initNotifications } = require('./services/notificationService');
 initNotifications();
 
