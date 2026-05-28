@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, BarChart2, Download, TrendingUp, LogOut, Menu } from 'lucide-react';
+import { 
+    LayoutDashboard, FileText, Server, GitPullRequest, 
+    GraduationCap, ClipboardCheck, Search, Download, 
+    LogOut, Menu, Brain 
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 
@@ -9,11 +13,11 @@ import PushNotificationManager from './PushNotificationManager';
 import GlobalLogModal from './GlobalLogModal';
 
 const proTips = [
-    { title: 'Pro Tip', text: 'Log your learnings daily — they\'re gold for interviews.' },
-    { title: 'Consistency', text: 'A small daily log beats a big weekly one. Build the habit.' },
-    { title: 'Growth', text: 'Use AI Analytics to spot your improvement patterns.' },
-    { title: 'Prep', text: 'Your exported logs are perfect for performance reviews.' },
-    { title: 'Speed', text: 'Press Ctrl+M on the Logs page to quickly create entries.' },
+    { title: 'API Resiliency', text: 'Implement exponential backoff when downstream microservices timeout.' },
+    { title: 'Testing Gaps', text: 'Mockito is key. Mock external dependencies to keep unit tests fast and hermetic.' },
+    { title: 'Database Safety', text: 'Indexes are not free. Choose compound keys carefully to match query filters.' },
+    { title: 'Code Reviews', text: 'Reviewing PRs shows leadership. Suggest thread safety and payload validation.' },
+    { title: 'PPO Portfolio', text: 'Manager Mode gathers all your PR activities automatically for standups.' },
 ];
 
 const Layout = () => {
@@ -43,9 +47,13 @@ const Layout = () => {
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
         { name: 'My Logs', path: '/logs', icon: FileText },
-        { name: 'Analytics', path: '/analytics', icon: BarChart2 },
-        { name: 'Self-Improvement', path: '/improvement', icon: TrendingUp },
-        { name: 'Export', path: '/export', icon: Download },
+        { name: 'Systems Footprint', path: '/systems-timeline', icon: Server },
+        { name: 'PR & Jira Logs', path: '/pr-activity', icon: GitPullRequest },
+        { name: 'Learning Timeline', path: '/learning', icon: GraduationCap },
+        { name: 'Manager Review / PPO', path: '/manager-review', icon: ClipboardCheck },
+        { name: 'AI Search & Recall', path: '/search', icon: Search },
+        { name: 'Staff Mentor Critique', path: '/critique', icon: Brain },
+        { name: 'Export Dossier', path: '/export', icon: Download },
     ];
     
     // Close mobile menu when route changes
@@ -138,14 +146,17 @@ const Layout = () => {
 
                 <div className="p-4 border-t border-border mt-auto space-y-4">
                     {/* User info */}
-                    <div className="flex items-center gap-3 px-3 py-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white text-sm font-bold shadow-sm">
-                            {username.charAt(0).toUpperCase()}
+                    <div className="flex items-center justify-between px-3 py-2">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                                {username.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0 text-left">
+                                <p className="text-sm font-medium text-text truncate">{username}</p>
+                                <p className="text-xs text-muted">Personal</p>
+                            </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-text truncate">{username}</p>
-                            <p className="text-xs text-muted">Personal</p>
-                        </div>
+                        <PushNotificationManager />
                     </div>
 
                     <button

@@ -8,7 +8,7 @@ const SummarySchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['weekly', 'monthly', 'custom'],
+        enum: ['weekly', 'monthly', 'sprint', 'ppo-review', 'contribution-report', 'custom'],
         required: true
     },
     startDate: {
@@ -22,6 +22,13 @@ const SummarySchema = new mongoose.Schema({
     content: {
         type: String,
         required: true
+    },
+    metadata: {
+        systemsCovered: { type: [String], default: [] },
+        technologiesUsed: { type: [String], default: [] },
+        totalPRs: { type: Number, default: 0 },
+        totalTickets: { type: Number, default: 0 },
+        ownershipBreakdown: { type: Map, of: Number, default: {} }
     },
     weekNumber: {
         type: Number,

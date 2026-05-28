@@ -255,7 +255,7 @@ const LogManager = () => {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.95 }}
                                         onClick={() => handleView(log)}
-                                        className="glass rounded-2xl p-6 group border border-border hover:border-accent/40 transition-all flex flex-col h-full bg-card shadow-lg cursor-pointer"
+                                        className="glass-panel glass-panel-hover rounded-2xl p-6 group flex flex-col h-full cursor-pointer shadow-lg"
                                     >
                                         <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-800">
                                             <div>

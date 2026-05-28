@@ -5,7 +5,8 @@ const WorkLog = require('../models/WorkLog');
 // @access  Public
 exports.getLogs = async (req, res) => {
     try {
-        const { page = 1, limit = 10, sort = 'desc', from, to, project, search, company } = req.query;
+        const { page = 1, limit = 10, sort = 'desc', from, to, project, search, company,
+                sprint, workStatus, systemsModules, technologiesUsed, ownershipLevel, complexity } = req.query;
 
         // Company filter is mandatory except for maybe admin (but here strict)
         if (!company) {
@@ -26,13 +27,44 @@ exports.getLogs = async (req, res) => {
             query.project = project;
         }
 
-        // Search (Project, Task, WorkDone, TechStack)
+        // Sprint Filter
+        if (sprint) {
+            query.sprint = sprint;
+        }
+
+        // Work Status Filter
+        if (workStatus) {
+            query.workStatus = workStatus;
+        }
+
+        // Ownership Level Filter
+        if (ownershipLevel) {
+            query.ownershipLevel = ownershipLevel;
+        }
+
+        // Complexity Filter
+        if (complexity) {
+            query.complexity = complexity;
+        }
+
+        // Systems/Modules filter
+        if (systemsModules) {
+            query.systemsModules = { $in: Array.isArray(systemsModules) ? systemsModules : systemsModules.split(',') };
+        }
+
+        // Technologies filter
+        if (technologiesUsed) {
+            query.technologiesUsed = { $in: Array.isArray(technologiesUsed) ? technologiesUsed : technologiesUsed.split(',') };
+        }
+
+        // Search (Project, Task, WorkDone, TechStack, RawNotes)
         if (search) {
             query.$or = [
                 { project: { $regex: search, $options: 'i' } },
                 { task: { $regex: search, $options: 'i' } },
                 { workDone: { $regex: search, $options: 'i' } },
-                { techStack: { $regex: search, $options: 'i' } }
+                { techStack: { $regex: search, $options: 'i' } },
+                { rawNotes: { $regex: search, $options: 'i' } }
             ];
         }
 
@@ -252,4 +284,95 @@ exports.getPendingLogs = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Structure raw messy engineering notes using Gemini AI
+// @route   POST /api/logs/structure-notes
+// @access  Public
+exports.structureNotes = async (req, res) => {
+    try {
+        const { rawNotes } = req.body;
+        if (!rawNotes) {
+            return res.status(400).json({ message: 'Raw notes are required for AI structuring.' });
+        }
+
+        const aiService = require('../services/aiService');
+        const prompts = require('../utils/prompts');
+
+        const prompt = prompts.RAW_NOTES_STRUCTURING_PROMPT.replace('{{RAW_NOTES}}', rawNotes);
+        const aiResponse = await aiService.generateCustomReport(prompt);
+        
+        let structuredData = null;
+        try {
+            let cleanText = aiResponse.trim();
+            if (cleanText.startsWith('```')) {
+                cleanText = cleanText.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '').trim();
+            }
+            structuredData = JSON.parse(cleanText);
+        } catch (parseError) {
+            console.error('Failed to parse structured notes JSON:', aiResponse, parseError);
+            return res.status(500).json({ 
+                message: 'Failed to parse AI response. Please try again or fill fields manually.',
+                rawAIResponse: aiResponse
+            });
+        }
+
+        res.json(structuredData);
+    } catch (error) {
+        console.error('Error structuring notes:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get systems/modules worked on timeline over time
+// @route   GET /api/logs/systems-timeline
+// @access  Public
+exports.getSystemsTimeline = async (req, res) => {
+    try {
+        const { company } = req.query;
+        if (!company) {
+            return res.status(400).json({ message: 'Company ID is required' });
+        }
+
+        const logs = await WorkLog.find({ 
+            company, 
+            status: 'Available',
+            systemsModules: { $exists: true, $not: { $size: 0 } }
+        }).sort({ date: -1 }).select('date sprint systemsModules task workDone technologiesUsed complexity prNumber jiraTicket');
+
+        res.json(logs);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get ImageKit authentication parameters
+// @route   GET /api/logs/imagekit-auth
+// @access  Public
+exports.getImageKitAuth = async (req, res) => {
+    try {
+        const crypto = require('crypto');
+        const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
+
+        if (!privateKey) {
+            return res.status(500).json({ message: 'ImageKit private key not configured' });
+        }
+
+        const token = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString('hex');
+        const expire = Math.floor(Date.now() / 1000) + 1800; // 30 mins
+        const signature = crypto
+            .createHmac('sha1', privateKey)
+            .update(token + expire)
+            .digest('hex');
+
+        res.json({
+            token,
+            expire,
+            signature
+        });
+    } catch (error) {
+        console.error('Error generating ImageKit authentication parameters:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
 

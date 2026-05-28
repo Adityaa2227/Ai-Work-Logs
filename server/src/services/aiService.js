@@ -2,6 +2,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Groq = require('groq-sdk');
 const WorkLog = require('../models/WorkLog');
 const Summary = require('../models/Summary');
+const prompts = require('../utils/prompts');
 
 // Initialize AI providers
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
@@ -58,91 +59,21 @@ function getMockSummary(logs) {
 }
 
 function buildPrompt(type, from, to, workLogs) {
+    const logsText = JSON.stringify(workLogs, null, 2);
+    const dateRangeStr = `${new Date(from).toLocaleDateString('en-GB')} - ${new Date(to).toLocaleDateString('en-GB')}`;
+
     if (type === 'weekly') {
-        return `
-You are drafting a professional Internship Weekly Report in a specific format.
-Period: ${new Date(from).toLocaleDateString('en-GB')} - ${new Date(to).toLocaleDateString('en-GB')}
-
-Logs (JSON data):
-${JSON.stringify(workLogs, null, 2)}
-
-Generate the report EXACTLY in this format. Use the data from the logs to fill in each section:
-
-Week (${new Date(from).getDate().toString().padStart(2,'0')}/${(new Date(from).getMonth()+1).toString().padStart(2,'0')}/${new Date(from).getFullYear().toString().substr(-2)} – ${new Date(to).getDate().toString().padStart(2,'0')}/${(new Date(to).getMonth()+1).toString().padStart(2,'0')}/${new Date(to).getFullYear().toString().substr(-2)})
-
-Key Contribution:
-[Write 2-3 sentences summarizing the main achievements and impact across all the work done this week]
-
-Development Work:
-[For each major task/project worked on, create numbered points with:
-•	Brief description of what was built/implemented
-•	Key features or functionality added
-•	Technical decisions made
-Use bullet points under each numbered item for sub-tasks]
-
-New Tools/Concept:
-•	[List new technologies, tools, libraries, or concepts learned]
-•	[Include validation techniques, design patterns, or approaches]
-•	[Mention specific technical skills acquired]
-
-Challenges & Resolution:
- Challenge: [Describe a technical problem or obstacle faced]
-Resolution: [Explain how it was solved]
-[Repeat for 1-2 major challenges]
-
-Feedback/Observation:
-•	[Mention any feedback received or notable observations]
-•	[Include collaboration details if relevant]
-
-Plan For next Week:
-[Briefly describe what's planned or expected for the coming week]
-
-Any other:
-[Optional: Add any additional notes, pending items, or relevant information]
-        `;
+        return prompts.WEEKLY_SUMMARY_PROMPT
+            .replace('{{LOGS}}', logsText)
+            .replace('{{DATE_RANGE}}', dateRangeStr);
     } else if (type === 'monthly') {
-        const monthName = new Date(from).toLocaleString('default', { month: 'short' });
-        const year = new Date(from).getFullYear();
-
-        return `
-You are drafting a professional Internship Monthly Report in a specific format.
-Month: ${monthName} ${year}
-
-Logs (JSON data):
-${JSON.stringify(workLogs, null, 2)}
-
-Generate the report EXACTLY in this format:
-
-Month: ${monthName} ${year}
-
-Project Worked On:
-[List unique project names worked on during this month]
-
-Major Contributions:
-[Summarize high-level impact and key achievements across all projects]
-
-Tech Stack:
-[List all technologies, frameworks, libraries used:
-•	Frontend: [list]
-•	Backend: [list]
-•	Tools: [list]]
-
-Key Learnings:
-•	[Consolidated list of important learnings from the month]
-•	[Include technical concepts, best practices, patterns learned]
-•	[Mention problem-solving approaches discovered]
-
-Areas to Improve:
-•	[Based on challenges faced, suggest 1-2 areas for improvement or skill development]
-
-Overall Summary:
-[Write 2-3 sentences summarizing the month's work, growth, and progress]
-        `;
+        return prompts.MONTHLY_SUMMARY_PROMPT
+            .replace('{{LOGS}}', logsText);
     } else {
         return `
-Analyze the following work logs and generate a professional summary.
-Logs: ${JSON.stringify(workLogs)}
-output format: Executive Summary, Key Achievements, Skills Used.
+Analyze the following work logs and generate a professional backend engineering summary.
+Logs: ${logsText}
+Output format: Executive Summary, Key Achievements, Skills/Systems Used.
         `;
     }
 }
@@ -151,32 +82,31 @@ output format: Executive Summary, Key Achievements, Skills Used.
 exports.generateCritique = async (logs) => {
     try {
         const prompt = `
-You are a senior engineering manager and mentor.
-Analyze the following work logs from an intern/junior developer.
-Your goal is to provide honest, constructive criticism and a concrete plan for improvement.
-Be direct but encouraging.
+You are a PayPal Senior Staff Backend Engineer conducting a technical contribution review.
+Analyze the following work logs from an intern.
+Your goal is to provide honest, constructive architectural criticism and an actionable plan for improvement.
+Focus on topics like: API performance, defensive coding, testing coverage, concurrency, database indexing, and system reliability.
 
 Logs:
-${JSON.stringify(logs)}
+${JSON.stringify(logs, null, 2)}
 
 Output Format (Markdown):
 
-# Self-Improvement Review
+# Backend Self-Improvement Review
 
-## 🛑 Constructive Criticism
-[Identify 2-3 weak points or bad habits seen in the logs. E.g., vague descriptions, lack of variety, slow progress.]
+## 🛑 Architectural & Code Gaps
+[Identify 2-3 technical areas of improvement. E.g., lacks robust unit testing, API payloads lack structural validation, insufficient database lock awareness, or vague description of work.]
 
-## 💡 Actionable Tips
-[Provide 3 specific tips to improve quality of work or logging.]
+## 💡 Practical Technical Tips
+[Provide 3 highly specific tips to improve backend code quality, logging, or operational safety.]
 
-## 🚀 Growth Challenge
-[A specific technical or soft-skill challenge for the next 2 days.]
+## 🚀 Systems Engineering Challenge
+[A specific technical design or implementation challenge for the next 2 days, e.g., 'write an integration test with Mockito/Sinon and hit 90% coverage for X service'.]
 
-## ⭐ Motivation
-[A short, powerful quote or sentence to boost morale.]
+## ⭐ Principal Quote
+[A brief, professional backend engineering advice quote regarding craftsmanship, simplicity, or operational excellence.]
 `;
 
-        // Use centralized generator with fallback models
         try {
             return await generateWithGemini(prompt);
         } catch (geminiError) {
@@ -193,19 +123,18 @@ Output Format (Markdown):
 exports.generateInsight = async (logs) => {
     try {
         const prompt = `
-You are a productivity coach for a software engineer.
-Based on their recent work logs, provide a brief, actionable "Daily Insight" or "Productivity Tip".
-Keep it friendly, motivating, and under 50 words.
+You are a PayPal Senior Staff Backend Engineer and technical mentor.
+Based on the intern's recent logs, provide a brief, actionable "Backend Technical Tip".
+Keep it friendly, highly technical (mention topics like caching, rate limiting, connection pooling, indexes, defensive validation), and under 60 words.
 
 Logs:
-${JSON.stringify(logs)}
+${JSON.stringify(logs, null, 2)}
 
 Format:
-**Tip:** [Your tip here]
-**Challenge:** [A small challenge for today]
+**Engineering Tip:** [Your technical tip here]
+**Micro-Challenge:** [A small systems challenge for today]
 `;
 
-        // Use centralized generator with fallback models
         try {
             return await generateWithGemini(prompt);
         } catch (geminiError) {
@@ -214,7 +143,7 @@ Format:
         }
     } catch (error) {
         console.error('AI Insight Error:', error);
-        return "**Tip:** consistency is key! Log your work daily to see progress.";
+        return "**Engineering Tip:** Build microservices defensively. Always validate API request parameters before performing database writes.\n**Micro-Challenge:** Add schema validation to your payment webhook endpoint today.";
     }
 };
 
@@ -254,6 +183,20 @@ async function generateWithGemini(prompt) {
 
     throw new Error('All AI models failed. Please check backend logs.');
 }
+
+exports.generateCustomReport = async (prompt) => {
+    try {
+        try {
+            return await generateWithGemini(prompt);
+        } catch (geminiError) {
+            console.warn('Gemini AI failed, attempting fallback to Groq:', geminiError.message);
+            return await generateWithGroq(prompt);
+        }
+    } catch (error) {
+        console.error('AI custom report error:', error);
+        throw error;
+    }
+};
 
 async function generateWithGroq(prompt) {
     if (!process.env.GROQ_API_KEY) {

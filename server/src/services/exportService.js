@@ -206,9 +206,17 @@ exports.generateSummaryPDF = (summaries, type, res, stream = null) => {
         let headerText = '';
         if (type === 'weekly') {
             headerText = `Week ${summary.weekNumber}, ${summary.year} (${new Date(summary.startDate).toLocaleDateString()} - ${new Date(summary.endDate).toLocaleDateString()})`;
-        } else {
+        } else if (type === 'monthly') {
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             headerText = `${months[summary.month - 1]} ${summary.year}`;
+        } else {
+            const displayNames = {
+                'sprint': 'Sprint Summary',
+                'ppo-review': 'PPO Self-Review Portfolio',
+                'contribution-report': 'Contribution Intelligence Report',
+                'custom': 'Technical Growth Report'
+            };
+            headerText = `${displayNames[type] || 'Report'} (${new Date(summary.startDate).toLocaleDateString()} - ${new Date(summary.endDate).toLocaleDateString()})`;
         }
 
         doc.fillColor('#312e81').fontSize(14).font('Helvetica-Bold')

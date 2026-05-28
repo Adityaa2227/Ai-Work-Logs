@@ -5,6 +5,7 @@ import { useCompany } from '../context/CompanyContext';
 import { Calendar, Sparkles, ChevronDown, ChevronUp, Edit2, Save, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
 
 const WeeklyLogs = () => {
     const { selectedCompany } = useCompany();
@@ -158,10 +159,8 @@ const WeeklyLogs = () => {
                                             placeholder="Edit summary content..."
                                         />
                                     ) : (
-                                        <div className="prose prose-invert max-w-none">
-                                            <div className="whitespace-pre-wrap text-text leading-relaxed font-sans">
-                                                {summary.content}
-                                            </div>
+                                        <div className="prose prose-invert max-w-none text-text text-sm leading-relaxed">
+                                            <ReactMarkdown>{summary.content}</ReactMarkdown>
                                         </div>
                                     )}
                                 </div>

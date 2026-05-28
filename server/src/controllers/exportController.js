@@ -33,14 +33,15 @@ exports.exportLogs = async (req, res) => {
 
 exports.exportSummaries = async (req, res) => {
     try {
-        const { type } = req.query; // 'weekly' or 'monthly'
+        const { type } = req.query; // 'weekly', 'monthly', 'sprint', 'ppo-review', 'contribution-report', 'custom'
         const Summary = require('../models/Summary');
         
-        if (!type || !['weekly', 'monthly'].includes(type)) {
-            return res.status(400).json({ message: 'Invalid type. Use weekly or monthly.' });
+        const allowedTypes = ['weekly', 'monthly', 'sprint', 'ppo-review', 'contribution-report', 'custom'];
+        if (!type || !allowedTypes.includes(type)) {
+            return res.status(400).json({ message: `Invalid type. Use one of: ${allowedTypes.join(', ')}` });
         }
 
-        const summaries = await Summary.find({ type }).sort({ year: -1, month: -1, week: -1 });
+        const summaries = await Summary.find({ type }).sort({ createdAt: -1 });
 
         // Assuming PDF format for now as that's the primary request
         const exportService = require('../services/exportService');

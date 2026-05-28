@@ -62,6 +62,26 @@ exports.autoGenerateWeeklySummary = async (company, date) => {
         // Generate AI summary
         const aiResult = await generateSummary({ from: monday, to: sunday, type: 'weekly' }, logs);
         
+        // Extract metadata
+        const systemsCovered = [...new Set(logs.flatMap(l => l.systemsModules || []).filter(Boolean))];
+        const technologiesUsed = [...new Set(logs.flatMap(l => l.technologiesUsed || l.techStack || []).filter(Boolean))];
+        
+        const PRActivity = require('../models/PRActivity');
+        const prs = await PRActivity.find({
+            company,
+            date: { $gte: monday, $lte: sunday }
+        });
+        const totalPRs = prs.filter(p => p.type.startsWith('pr-')).length;
+        const totalTickets = prs.filter(p => p.type === 'jira-ticket').length;
+
+        const ownershipBreakdown = new Map();
+        logs.forEach(l => {
+            if (l.ownershipLevel) {
+                const count = ownershipBreakdown.get(l.ownershipLevel) || 0;
+                ownershipBreakdown.set(l.ownershipLevel, count + 1);
+            }
+        });
+
         // Save summary
         const summary = new Summary({
             company,
@@ -71,6 +91,13 @@ exports.autoGenerateWeeklySummary = async (company, date) => {
             content: aiResult.content,
             weekNumber,
             year,
+            metadata: {
+                systemsCovered,
+                technologiesUsed,
+                totalPRs,
+                totalTickets,
+                ownershipBreakdown
+            },
             generatedAt: new Date()
         });
         
@@ -118,6 +145,26 @@ exports.autoGenerateMonthlySummary = async (company, date) => {
         // Generate AI summary
         const aiResult = await generateSummary({ from: startDate, to: endDate, type: 'monthly' }, logs);
         
+        // Extract metadata
+        const systemsCovered = [...new Set(logs.flatMap(l => l.systemsModules || []).filter(Boolean))];
+        const technologiesUsed = [...new Set(logs.flatMap(l => l.technologiesUsed || l.techStack || []).filter(Boolean))];
+        
+        const PRActivity = require('../models/PRActivity');
+        const prs = await PRActivity.find({
+            company,
+            date: { $gte: startDate, $lte: endDate }
+        });
+        const totalPRs = prs.filter(p => p.type.startsWith('pr-')).length;
+        const totalTickets = prs.filter(p => p.type === 'jira-ticket').length;
+
+        const ownershipBreakdown = new Map();
+        logs.forEach(l => {
+            if (l.ownershipLevel) {
+                const count = ownershipBreakdown.get(l.ownershipLevel) || 0;
+                ownershipBreakdown.set(l.ownershipLevel, count + 1);
+            }
+        });
+
         // Save summary
         const summary = new Summary({
             company,
@@ -127,6 +174,13 @@ exports.autoGenerateMonthlySummary = async (company, date) => {
             content: aiResult.content,
             month,
             year,
+            metadata: {
+                systemsCovered,
+                technologiesUsed,
+                totalPRs,
+                totalTickets,
+                ownershipBreakdown
+            },
             generatedAt: new Date()
         });
         

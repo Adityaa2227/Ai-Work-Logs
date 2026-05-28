@@ -20,6 +20,9 @@ app.use('/api/summaries', require('./routes/summaryRoutes'));
 app.use('/api/feedback', require('./routes/feedbackRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/pr', require('./routes/pr'));
+app.use('/api/review', require('./routes/review'));
+app.use('/api/search', require('./routes/search'));
 
 const { initNotifications } = require('./services/notificationService');
 initNotifications();

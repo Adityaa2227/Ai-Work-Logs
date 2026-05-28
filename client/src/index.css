@@ -2,23 +2,24 @@
 
 @layer base {
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     scroll-behavior: smooth;
   }
 
   body {
-    background-color: #000000;
-    /* pure black */
-    color: #f4f4f5;
-    /* text-zinc-100 */
+    background-color: #070a13;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.05) 0px, transparent 50%);
+    color: #f8fafc;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   /* Custom Scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -26,27 +27,103 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    /* slate-300 */
+    background-color: rgba(99, 102, 241, 0.15);
     border-radius: 9999px;
+    transition: background-color 0.2s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: #94a3b8;
-    /* slate-400 */
+    background-color: rgba(99, 102, 241, 0.35);
   }
 }
 
-/* Glassmorphism utility */
-.glass {
-  background: rgba(24, 24, 27, 0.4);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+/* Glassmorphism utilities */
+.glass, .glass-panel {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3) !important;
 }
 
-.card-hover {
-  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.glass-panel-hover:hover {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border-color: rgba(99, 102, 241, 0.25) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px -3px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Premium glows */
+.glow-accent {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+.glow-teal {
+  box-shadow: 0 0 20px rgba(20, 184, 166, 0.15);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+}
+
+.glow-rose {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+}
+
+/* Custom premium input fields */
+.premium-input {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0.75rem !important;
+  color: #f8fafc !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.premium-input:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  outline: none !important;
+}
+
+/* Premium button styling */
+.btn-premium {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2) !important;
+}
+
+.btn-premium:hover {
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Active tag selectors */
+.pill-chip {
+  background: rgba(30, 41, 59, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #94a3b8 !important;
+  border-radius: 9999px !important;
+  font-size: 0.75rem !important;
+  padding: 0.35rem 0.85rem !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.pill-chip:hover {
+  background: rgba(99, 102, 241, 0.08) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  color: #a5b4fc !important;
+}
+
+.pill-chip-active {
+  background: rgba(99, 102, 241, 0.15) !important;
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  color: #e0e7ff !important;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.1) !important;
 }
 
 /* Skeleton loading animations */
@@ -68,19 +145,6 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
   border-radius: 0.75rem;
-}
-
-.skeleton-text {
-  composes: skeleton;
-  height: 1rem;
-  border-radius: 0.375rem;
-}
-
-.skeleton-card {
-  background: rgba(24, 24, 27, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 1rem;
-  overflow: hidden;
 }
 
 /* Hide scrollbar utility */

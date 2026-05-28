@@ -5,10 +5,14 @@ import { Toaster } from 'sonner';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import LogManager from './pages/LogManager';
-import Analytics from './pages/Analytics';
 import Export from './pages/Export';
-import Improvement from './pages/Improvement';
 import Login from './pages/Login';
+import SystemsTimeline from './pages/SystemsTimeline';
+import PRJiraActivity from './pages/PRJiraActivity';
+import ManagerReview from './pages/ManagerReview';
+import SmartSearch from './pages/SmartSearch';
+import LearningTimeline from './pages/LearningTimeline';
+import AIFeedback from './pages/AIFeedback';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -24,9 +28,13 @@ function App() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="logs" element={<LogManager />} />
-          <Route path="analytics" element={<Analytics />} />
+          <Route path="systems-timeline" element={<SystemsTimeline />} />
+          <Route path="pr-activity" element={<PRJiraActivity />} />
+          <Route path="learning" element={<LearningTimeline />} />
+          <Route path="manager-review" element={<ManagerReview />} />
+          <Route path="search" element={<SmartSearch />} />
           <Route path="export" element={<Export />} />
-          <Route path="improvement" element={<Improvement />} />
+          <Route path="critique" element={<AIFeedback />} />
         </Route>
       </Routes>
     </>
